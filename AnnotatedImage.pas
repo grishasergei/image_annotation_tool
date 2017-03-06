@@ -4,42 +4,41 @@ interface
 
 uses
   Vcl.Graphics, System.Types, Generics.Collections,
-  Superobject;
+  Superobject, Annotation.Action;
 
 type
 
   TAnnotatedImage = class(TObject)
   private
     FBitmapImage: TBitmap;
-    FBitmapMarkers: TBitmap;
-    FMarkers:   TList<TPoint>;
+    FBitmapAnnotationActions: TBitmap;
+    FAnnotationActions: TList<IAnnotationAction>;
     FName:      string;
     FIsChanged: boolean;
-    procedure   DrawMarkerAt(const Point: TPoint);
     function    GetCombinedBitmap: TBitmap;
-    procedure   CreateMarkersBitmap;
+    procedure   CreateAnnotationActionsBitmap;
     function    GetHeight: integer;
     function    GetWidth: integer;
     function    GetMaskBitmap: TBitmap;
-    function    GetMarkersJSON: ISuperObject;
+    function    GetAnnotationActionsJSON: ISuperObject;
   public
     constructor Create(const ImageBitmap: TBitmap; const Name: string); overload;
     constructor Create(const ImageGraphic: TGraphic; const Name: string); overload;
     destructor  Destroy; override;
     // properties
     property    ImageBitmap: TBitmap read FBitmapImage;
-    property    MarkersBitmap: TBitmap read FBitmapMarkers;
+    property    AnnotationActionsBitmap: TBitmap read FBitmapAnnotationActions;
     property    CombinedBitmap: TBitmap read GetCombinedBitmap;
     property    MaskBitmap: TBitmap read GetMaskBitmap;
-    property    Markers: TList<TPoint> read FMarkers;
+    property    AnnotationActions: TList<IAnnotationAction> read FAnnotationActions;
     property    Width: integer read GetWidth;
     property    Height: integer read GetHeight;
     property    Name: string read FName;
-    property    MarkersJSON: ISuperObject read GetMarkersJSON;
+    property    AnnotationActionsJSON: ISuperObject read GetAnnotationActionsJSON;
     property    IsChanged: boolean read FIsChanged;
     // methods
-    procedure   PutMarkerAt(const X, Y, ViewportWidth, ViewportHeight: integer);
-    procedure   ClearMarkers;
+    procedure   PutDotMarkerAt(const X, Y, ViewportWidth, ViewportHeight: integer);
+    procedure   ClearAnnotationActions;
     procedure   OnSaved;
   end;
 
@@ -54,67 +53,55 @@ constructor TAnnotatedImage.Create(const ImageBitmap: TBitmap; const Name: strin
 begin
   FBitmapImage:= TBitmap.Create;
   FBitmapImage.Assign(ImageBitmap);
-  CreateMarkersBitmap;
-  FMarkers:= TList<TPoint>.Create;
+  CreateAnnotationActionsBitmap;
+  FAnnotationActions:= Tlist<IAnnotationAction>.Create;
   FName:= Name;
   FIsChanged:= True;
 end;
 
-procedure TAnnotatedImage.ClearMarkers;
+procedure TAnnotatedImage.ClearAnnotationActions;
 begin
-  FMarkers.Clear;
-  CreateMarkersBitmap;
+  FAnnotationActions.Clear;
+  CreateAnnotationActionsBitmap;
 end;
 
 constructor TAnnotatedImage.Create(const ImageGraphic: TGraphic; const Name: string);
 begin
   FBitmapImage:= TBitmap.Create;
   FBitmapImage.Assign(ImageGraphic);
-  CreateMarkersBitmap;
-  FMarkers:= TList<TPoint>.Create;
+  CreateAnnotationActionsBitmap;
+  FAnnotationActions:= TList<IAnnotationAction>.Create;
   FName:= Name;
   FIsChanged:= True;
 end;
 
-procedure TAnnotatedImage.CreateMarkersBitmap;
+procedure TAnnotatedImage.CreateAnnotationActionsBitmap;
 begin
-  FBitmapMarkers:= TBitmap.Create;
-  FBitmapMarkers.Assign(FBitmapImage);
+  FBitmapAnnotationActions:= TBitmap.Create;
+  FBitmapAnnotationActions.Assign(FBitmapImage);
 
-  FBitmapMarkers.Transparent:= true;
-  FBitmapMarkers.TransparentMode:= tmFixed;
-  FBitmapMarkers.TransparentColor:= clBlack;
+  FBitmapAnnotationActions.Transparent:= true;
+  FBitmapAnnotationActions.TransparentMode:= tmFixed;
+  FBitmapAnnotationActions.TransparentColor:= clBlack;
 
-  FBitmapMarkers.Canvas.Brush.Color:= clBlack;
-  FBitmapMarkers.Canvas.Brush.Style:= bsSolid;
-  FBitmapMarkers.Canvas.FillRect(Rect(0, 0, FBitmapMarkers.Width, FBitmapMarkers.Height));
+  FBitmapAnnotationActions.Canvas.Brush.Color:= clBlack;
+  FBitmapAnnotationActions.Canvas.Brush.Style:= bsSolid;
+  FBitmapAnnotationActions.Canvas.FillRect(Rect(0, 0, FBitmapAnnotationActions.Width, FBitmapAnnotationActions.Height));
 end;
 
 destructor TAnnotatedImage.Destroy;
 begin
   FBitmapImage.Free;
-  FBitmapMarkers.Free;
-  FMarkers.Free;
+  FBitmapAnnotationActions.Free;
+  FAnnotationActions.Free;
   inherited;
-end;
-
-procedure TAnnotatedImage.DrawMarkerAt(const Point: TPoint);
-begin
-  FBitmapMarkers.Canvas.Pen.Color:= clRed;
-  FBitmapMarkers.Canvas.Pen.Width:= 2;
-
-  FBitmapMarkers.Canvas.MoveTo(Point.X, Point.Y - 10);
-  FBitmapMarkers.Canvas.LineTo(Point.X, Point.Y + 10);
-
-  FBitmapMarkers.Canvas.MoveTo(Point.X - 10, Point.Y);
-  FBitmapMarkers.Canvas.LineTo(Point.X +  10, Point.Y);
 end;
 
 function TAnnotatedImage.GetCombinedBitmap: TBitmap;
 begin
   Result:= TBitmap.Create;
   Result.Assign(FBitmapImage);
-  Result.Canvas.Draw(0, 0, FBitmapMarkers);
+  Result.Canvas.Draw(0, 0, FBitmapAnnotationActions);
 end;
 
 function TAnnotatedImage.GetHeight: integer;
@@ -122,28 +109,20 @@ begin
   Result:= FBitmapImage.Width;
 end;
 
-function TAnnotatedImage.GetMarkersJSON: ISuperObject;
+function TAnnotatedImage.GetAnnotationActionsJSON: ISuperObject;
 var
-  Point: TPoint;
-  PointJSON: ISuperObject;
+  AnnotationAction: IAnnotationAction;
 begin
-
   Result:= SO;
+  Result.O['annotations']:= SA([]);
 
-  Result.O['markers']:= SA([]);
-
-  for Point in FMarkers do
-  begin
-    PointJSON:= SO;
-    PointJSON.I['x']:= Point.X;
-    PointJSON.I['y']:= Point.Y;
-    Result.A['markers'].Add(PointJSON);
-  end;
+  for AnnotationAction in FAnnotationActions do
+    Result.A['annotations'].Add(AnnotationAction.ToJSON);
 end;
 
 function TAnnotatedImage.GetMaskBitmap: TBitmap;
 var
-  Point: TPoint;
+  AnnotationAction: IAnnotationAction;
 begin
   Result:= TBitmap.Create;
   Result.PixelFormat:= pf1bit;
@@ -152,8 +131,8 @@ begin
   Result.Canvas.Brush.Color:= clBlack;
   Result.Canvas.FillRect(Rect(0, 0, FBitmapImage.Width, FBitmapImage.Height));
 
-  for Point in FMarkers do
-    Result.Canvas.Pixels[Point.X, Point.Y]:= clWhite;
+  for AnnotationAction in FAnnotationActions do
+    AnnotationAction.RenderOnMask(Result);
 end;
 
 function TAnnotatedImage.GetWidth: integer;
@@ -166,18 +145,21 @@ begin
   FIsChanged:= False;
 end;
 
-procedure TAnnotatedImage.PutMarkerAt(const X, Y, ViewportWidth,
+procedure TAnnotatedImage.PutDotMarkerAt(const X, Y, ViewportWidth,
   ViewportHeight: integer);
 var
   PointOnImage: TPoint;
+  AnnotationAction: IAnnotationAction;
 begin
   if IsOnImage(TPoint.Create(X, Y), ViewportWidth, ViewportHeight, FBitmapImage.Width, FBitmapImage.Height) then
   begin
     PointOnImage:= ViewportToImage(TPoint.Create(X, Y),
                                    ViewportWidth, ViewportHeight,
                                    FBitmapImage.Width, FBitmapImage.Height);
-    FMarkers.Add(PointOnImage);
-    DrawMarkerAt(PointOnImage);
+
+    AnnotationAction:= TDotMarker.Create(PointOnImage);
+    FAnnotationActions.Add(AnnotationAction);
+    AnnotationAction.RenderOnView(FBitmapAnnotationActions);
     FIsChanged:= True;
   end;
 

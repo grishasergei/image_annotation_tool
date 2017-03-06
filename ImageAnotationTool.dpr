@@ -8,7 +8,8 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   Main.Controller in 'Main.Controller.pas',
-  Annotation.Interfaces in 'Annotation.Interfaces.pas';
+  Annotation.Interfaces in 'Annotation.Interfaces.pas',
+  Annotation.Action in 'Annotation.Action.pas';
 
 {$R *.res}
 

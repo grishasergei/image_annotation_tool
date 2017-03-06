@@ -59,7 +59,7 @@ begin
   if not Assigned(CurrentImage) then
     Exit;
 
-  CurrentImage.ClearMarkers;
+  CurrentImage.ClearAnnotationActions;
   ShowCurrentImage;
 end;
 
@@ -122,9 +122,9 @@ begin
   if not Assigned(CurrentImage) then
     Exit;
 
-  CurrentImage.PutMarkerAt(X, Y, ViewportWidth, ViewportHeight);
+  CurrentImage.PutDotMarkerAt(X, Y, ViewportWidth, ViewportHeight);
   FView.RenderBitmap(CurrentImage.CombinedBitmap);
-  FView.ShowMarkersList(CurrentImage.Markers);
+  //FView.ShowMarkersList(CurrentImage.Markers);
 end;
 
 procedure TAnnotatedImageController.SaveAllAnnotations;
@@ -165,7 +165,7 @@ begin
   end;
 
   // save JSON
-  MaskJSON:= AnnotatedImage.MarkersJSON;
+  MaskJSON:= AnnotatedImage.AnnotationActionsJSON;
   MaskJSON.AsJSon(True);
   FileName:= ExtractFilePath(AnnotatedImage.Name) +
                   'markers\' +
@@ -211,7 +211,7 @@ begin
   ImageInfo.Height:= FAnnotatedImages[Index].Height;
   FView.ShowImageInfo(ImageInfo);
 
-  FView.ShowMarkersList(FAnnotatedImages[Index].Markers);
+  //FView.ShowMarkersList(FAnnotatedImages[Index].Markers);
 
   FView.ShowImageCount(Index + 1, FAnnotatedImages.Count);
 end;
