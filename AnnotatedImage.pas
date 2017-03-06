@@ -11,23 +11,23 @@ type
   TAnnotatedImage = class(TObject)
   private
     FBitmapImage: TBitmap;
-    FBitmapAnnotationActions: TBitmap;
     FAnnotationActions: TList<IAnnotationAction>;
     FName:      string;
     FIsChanged: boolean;
+    FCurrentAnnotationActionIndex: integer;
     function    GetCombinedBitmap: TBitmap;
-    procedure   CreateAnnotationActionsBitmap;
     function    GetHeight: integer;
     function    GetWidth: integer;
     function    GetMaskBitmap: TBitmap;
     function    GetAnnotationActionsJSON: ISuperObject;
+    procedure   PushAnnotationAction(const AnnotationAction: IAnnotationAction);
   public
     constructor Create(const ImageBitmap: TBitmap; const Name: string); overload;
     constructor Create(const ImageGraphic: TGraphic; const Name: string); overload;
     destructor  Destroy; override;
     // properties
     property    ImageBitmap: TBitmap read FBitmapImage;
-    property    AnnotationActionsBitmap: TBitmap read FBitmapAnnotationActions;
+    //property    AnnotationActionsBitmap: TBitmap read FBitmapAnnotationActions;
     property    CombinedBitmap: TBitmap read GetCombinedBitmap;
     property    MaskBitmap: TBitmap read GetMaskBitmap;
     property    AnnotationActions: TList<IAnnotationAction> read FAnnotationActions;
@@ -40,6 +40,7 @@ type
     procedure   PutDotMarkerAt(const X, Y, ViewportWidth, ViewportHeight: integer);
     procedure   ClearAnnotationActions;
     procedure   OnSaved;
+    procedure   SetAnnotationActionIndex(const Value: integer);
   end;
 
 implementation
@@ -53,55 +54,69 @@ constructor TAnnotatedImage.Create(const ImageBitmap: TBitmap; const Name: strin
 begin
   FBitmapImage:= TBitmap.Create;
   FBitmapImage.Assign(ImageBitmap);
-  CreateAnnotationActionsBitmap;
   FAnnotationActions:= Tlist<IAnnotationAction>.Create;
   FName:= Name;
   FIsChanged:= True;
+  FCurrentAnnotationActionIndex:= -1;
+  PushAnnotationAction(TOriginalImageAction.Create);
 end;
 
 procedure TAnnotatedImage.ClearAnnotationActions;
 begin
   FAnnotationActions.Clear;
-  CreateAnnotationActionsBitmap;
+  FCurrentAnnotationActionIndex:= -1;
+  PushAnnotationAction(TOriginalImageAction.Create);
 end;
 
 constructor TAnnotatedImage.Create(const ImageGraphic: TGraphic; const Name: string);
 begin
   FBitmapImage:= TBitmap.Create;
   FBitmapImage.Assign(ImageGraphic);
-  CreateAnnotationActionsBitmap;
   FAnnotationActions:= TList<IAnnotationAction>.Create;
   FName:= Name;
   FIsChanged:= True;
-end;
-
-procedure TAnnotatedImage.CreateAnnotationActionsBitmap;
-begin
-  FBitmapAnnotationActions:= TBitmap.Create;
-  FBitmapAnnotationActions.Assign(FBitmapImage);
-
-  FBitmapAnnotationActions.Transparent:= true;
-  FBitmapAnnotationActions.TransparentMode:= tmFixed;
-  FBitmapAnnotationActions.TransparentColor:= clBlack;
-
-  FBitmapAnnotationActions.Canvas.Brush.Color:= clBlack;
-  FBitmapAnnotationActions.Canvas.Brush.Style:= bsSolid;
-  FBitmapAnnotationActions.Canvas.FillRect(Rect(0, 0, FBitmapAnnotationActions.Width, FBitmapAnnotationActions.Height));
+  FCurrentAnnotationActionIndex:= -1;
+  PushAnnotationAction(TOriginalImageAction.Create);
 end;
 
 destructor TAnnotatedImage.Destroy;
 begin
   FBitmapImage.Free;
-  FBitmapAnnotationActions.Free;
   FAnnotationActions.Free;
   inherited;
 end;
 
 function TAnnotatedImage.GetCombinedBitmap: TBitmap;
+var
+  i: integer;
+  AnnotationAction: IAnnotationAction;
+  BitmapAnnotationActions: TBitmap;
 begin
   Result:= TBitmap.Create;
   Result.Assign(FBitmapImage);
-  Result.Canvas.Draw(0, 0, FBitmapAnnotationActions);
+
+  BitmapAnnotationActions:= TBitmap.Create;
+  try
+    BitmapAnnotationActions.Assign(FBitmapImage);
+
+    BitmapAnnotationActions.Transparent:= true;
+    BitmapAnnotationActions.TransparentMode:= tmFixed;
+    BitmapAnnotationActions.TransparentColor:= clBlack;
+
+    BitmapAnnotationActions.Canvas.Brush.Color:= clBlack;
+    BitmapAnnotationActions.Canvas.Brush.Style:= bsSolid;
+    BitmapAnnotationActions.Canvas.FillRect(Rect(0, 0, BitmapAnnotationActions.Width, BitmapAnnotationActions.Height));
+
+    for i := 0 to FCurrentAnnotationActionIndex do
+    begin
+      AnnotationAction:= FAnnotationActions[i];
+      AnnotationAction.RenderOnView(BitmapAnnotationActions);
+    end;
+
+    Result.Canvas.Draw(0, 0, BitmapAnnotationActions);
+  finally
+    BitmapAnnotationActions.Free;
+  end;
 end;
 
 function TAnnotatedImage.GetHeight: integer;
@@ -112,17 +127,22 @@ end;
 function TAnnotatedImage.GetAnnotationActionsJSON: ISuperObject;
 var
   AnnotationAction: IAnnotationAction;
+  i: integer;
 begin
   Result:= SO;
   Result.O['annotations']:= SA([]);
 
-  for AnnotationAction in FAnnotationActions do
+  for i := 0 to FCurrentAnnotationActionIndex do
+  begin
+    AnnotationAction:= FAnnotationActions[i];
     Result.A['annotations'].Add(AnnotationAction.ToJSON);
+  end;
 end;
 
 function TAnnotatedImage.GetMaskBitmap: TBitmap;
 var
   AnnotationAction: IAnnotationAction;
+  i: integer;
 begin
   Result:= TBitmap.Create;
   Result.PixelFormat:= pf1bit;
@@ -131,8 +151,11 @@ begin
   Result.Canvas.Brush.Color:= clBlack;
   Result.Canvas.FillRect(Rect(0, 0, FBitmapImage.Width, FBitmapImage.Height));
 
-  for AnnotationAction in FAnnotationActions do
+  for i := 0 to FCurrentAnnotationActionIndex do
+  begin
+    AnnotationAction:= FAnnotationActions[i];
     AnnotationAction.RenderOnMask(Result);
+  end;
 end;
 
 function TAnnotatedImage.GetWidth: integer;
@@ -143,6 +166,17 @@ end;
 procedure TAnnotatedImage.OnSaved;
 begin
   FIsChanged:= False;
+end;
+
+procedure TAnnotatedImage.PushAnnotationAction(const AnnotationAction: IAnnotationAction);
+begin
+  if FCurrentAnnotationActionIndex > -1 then
+    while FCurrentAnnotationActionIndex < (FAnnotationActions.Count - 1) do
+      FAnnotationActions.Delete(FAnnotationActions.Count - 1);
+
+  FAnnotationActions.Add(AnnotationAction);
+  Inc(FCurrentAnnotationActionIndex);
+  FIsChanged:= True;
 end;
 
 procedure TAnnotatedImage.PutDotMarkerAt(const X, Y, ViewportWidth,
@@ -158,11 +192,17 @@ begin
                                    FBitmapImage.Width, FBitmapImage.Height);
 
     AnnotationAction:= TDotMarker.Create(PointOnImage);
-    FAnnotationActions.Add(AnnotationAction);
-    AnnotationAction.RenderOnView(FBitmapAnnotationActions);
-    FIsChanged:= True;
+    PushAnnotationAction(AnnotationAction);
   end;
+end;
 
+procedure TAnnotatedImage.SetAnnotationActionIndex(const Value: integer);
+begin
+  if (Value > -1) and (Value < FAnnotationActions.Count) then
+  begin
+    FCurrentAnnotationActionIndex:= Value;
+    FIsChanged:= FCurrentAnnotationActionIndex > 0;
+  end;
 end;
 
 end.

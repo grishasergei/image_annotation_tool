@@ -86,7 +86,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdActns, System.Actions,
   Vcl.ActnList, Vcl.ExtDlgs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.WinXCtrls, Vcl.Buttons, Vcl.Grids, Generics.Collections, Annotation.Interfaces, Main.Controller;
+  Vcl.WinXCtrls, Vcl.Buttons, Vcl.Grids, Generics.Collections, Annotation.Interfaces, Main.Controller,
+  Annotation.Action;
 
 type
   TCrowdAnnotationForm = class(TForm, IImageAnnotationView)
@@ -100,7 +101,6 @@ type
     ImageOpen: TFileOpen;
     ButtonSave: TButton;
     ActionToggleMarkers: TAction;
-    GridMarkers: TStringGrid;
     PanelImageInfo: TPanel;
     PanelCaptions: TPanel;
     PanelValues: TPanel;
@@ -121,11 +121,12 @@ type
     ActionSaveAllAnnotations: TAction;
     GridPanelCenterTop: TGridPanel;
     LabelCurrentImageFullName: TLabel;
-    LabelMarkersCaption: TLabel;
+    LabelHistoryCaption: TLabel;
     ButtonClearMarkers: TButton;
     ActionClearMarkers: TAction;
     ImageContainer: TImage;
     PanelImageContainer: TPanel;
+    ListBoxHistory: TListBox;
     procedure ImageOpenAccept(Sender: TObject);
     procedure ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -137,6 +138,7 @@ type
     procedure ActionSaveAllAnnotationsExecute(Sender: TObject);
     procedure ActionClearMarkersExecute(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure ListBoxHistoryClick(Sender: TObject);
   private
     { Private declarations }
     FController: TAnnotatedImageController;
@@ -144,10 +146,10 @@ type
     //procedure ViewportToImage(const X, Y: integer; const AImage: TcxImage; var XNew, YNew: integer);
   public
     { Public declarations }
-    procedure ShowMarkersList(const Markers: TList<TPoint>);
     procedure ShowImageInfo(const ImageInfo: TImageInfo);
     procedure RenderBitmap(const ABitmap: TBitmap);
     procedure ShowImageCount(const ACurrentIndex, ACount: integer);
+    procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>);
   end;
 
 var
@@ -218,6 +220,14 @@ begin
   LoadImage((Sender as TFileOpen).Dialog.Files);
 end;
 
+procedure TCrowdAnnotationForm.ListBoxHistoryClick(Sender: TObject);
+begin
+  FController.SetAnnotationActionIndex(ListBoxHistory.ItemIndex);
+  ListBoxHistory.OnClick:= nil;
+  ListBoxHistory.Selected[ListBoxHistory.ItemIndex]:= true;
+  ListBoxHistory.OnClick:= ListBoxHistoryClick;
+end;
+
 procedure TCrowdAnnotationForm.LoadImage(const FileName: TStrings);
 begin
   FController.OpenImages(FileName);
@@ -227,6 +237,16 @@ procedure TCrowdAnnotationForm.RenderBitmap(const ABitmap: TBitmap);
 begin
   ImageContainer.Picture.Bitmap.Assign(ABitmap);
   PanelImageContainer.ShowCaption:= false;
+end;
+
+procedure TCrowdAnnotationForm.ShowHistory(
+  const AnnotationActions: TList<IAnnotationAction>);
+var
+  AnnotationAction: IAnnotationAction;
+begin
+  ListBoxHistory.Clear;
+  for AnnotationAction in AnnotationActions do
+    ListBoxHistory.Items.Add(AnnotationAction.HistoryCaption);
 end;
 
 procedure TCrowdAnnotationForm.ShowImageCount(const ACurrentIndex, ACount: integer);
@@ -240,24 +260,6 @@ begin
   LabelCurrentImageFullName.Caption:= ImageInfo.FileName;
   LabelImageWidth.Caption:= IntToStr(ImageInfo.Width);
   LabelImageHeight.Caption:= IntToStr(ImageInfo.Height);
-end;
-
-procedure TCrowdAnnotationForm.ShowMarkersList(const Markers: TList<TPoint>);
-var
-  i: integer;
-begin
-  LabelMarkersCaption.Caption:= 'Markers: ' + IntToStr(Markers.Count);
-
-  GridMarkers.RowCount:= Markers.Count + 1;
-
-  GridMarkers.Cells[1, 0]:= 'X';
-  GridMarkers.Cells[2, 0]:= 'Y';
-  for i := 0 to Markers.Count - 1 do
-  begin
-    GridMarkers.Cells[0, i + 1]:= IntToStr(i + 1);
-    GridMarkers.Cells[1, i + 1]:= IntToStr(Markers[i].X);
-    GridMarkers.Cells[2, i + 1]:= IntToStr(Markers[i].Y);
-  end;
 end;
 
 end.

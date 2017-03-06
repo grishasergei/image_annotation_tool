@@ -32,6 +32,7 @@ type
     procedure   SaveAllAnnotations;
     procedure   ClearMarkersOnCurrentImage;
     function    HasUnsavedChanges: boolean;
+    procedure   SetAnnotationActionIndex(const AValue: integer);
   end;
 
 implementation
@@ -124,6 +125,7 @@ begin
 
   CurrentImage.PutDotMarkerAt(X, Y, ViewportWidth, ViewportHeight);
   FView.RenderBitmap(CurrentImage.CombinedBitmap);
+  FView.ShowHistory(CurrentImage.AnnotationActions);
   //FView.ShowMarkersList(CurrentImage.Markers);
 end;
 
@@ -177,6 +179,13 @@ begin
   AnnotatedImage.OnSaved;
 end;
 
+procedure TAnnotatedImageController.SetAnnotationActionIndex(
+  const AValue: integer);
+begin
+  CurrentImage.SetAnnotationActionIndex(AValue);
+  ShowCurrentImage;
+end;
+
 procedure TAnnotatedImageController.SetCurrentImageIndex(const Value: integer);
 begin
   if FAnnotatedImages.Count = 0 then
@@ -211,6 +220,7 @@ begin
   ImageInfo.Height:= FAnnotatedImages[Index].Height;
   FView.ShowImageInfo(ImageInfo);
 
+  FView.ShowHistory(CurrentImage.AnnotationActions);
   //FView.ShowMarkersList(FAnnotatedImages[Index].Markers);
 
   FView.ShowImageCount(Index + 1, FAnnotatedImages.Count);

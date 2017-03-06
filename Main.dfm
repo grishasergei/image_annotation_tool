@@ -242,10 +242,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Color = clAppWorkSpace
       ParentBackground = False
       TabOrder = 2
-      ExplicitLeft = 352
-      ExplicitTop = 168
-      ExplicitWidth = 185
-      ExplicitHeight = 41
       object ImageContainer: TImage
         Left = 0
         Top = 0
@@ -273,39 +269,15 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     Caption = 'Panel1'
     ShowCaption = False
     TabOrder = 3
-    object LabelMarkersCaption: TLabel
+    object LabelHistoryCaption: TLabel
       AlignWithMargins = True
       Left = 3
       Top = 83
       Width = 196
       Height = 13
       Align = alTop
-      Caption = 'Markers'
-      ExplicitWidth = 38
-    end
-    object GridMarkers: TStringGrid
-      Left = 0
-      Top = 99
-      Width = 202
-      Height = 291
-      Align = alClient
-      BevelInner = bvNone
-      BevelOuter = bvNone
-      BorderStyle = bsNone
-      ColCount = 3
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
-      ScrollBars = ssVertical
-      TabOrder = 0
-      ColWidths = (
-        64
-        64
-        64)
-      RowHeights = (
-        24
-        24
-        24
-        24
-        24)
+      Caption = 'History'
+      ExplicitWidth = 34
     end
     object PanelImageInfo: TPanel
       Left = 0
@@ -316,7 +288,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       BevelOuter = bvNone
       Caption = 'PanelImageInfo'
       ShowCaption = False
-      TabOrder = 1
+      TabOrder = 0
       object PanelCaptions: TPanel
         Left = 0
         Top = 0
@@ -396,6 +368,16 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
           ExplicitWidth = 3
         end
       end
+    end
+    object ListBoxHistory: TListBox
+      Left = 0
+      Top = 99
+      Width = 202
+      Height = 291
+      Align = alClient
+      ItemHeight = 13
+      TabOrder = 1
+      OnClick = ListBoxHistoryClick
     end
   end
   object PanelBottom: TPanel

@@ -12,6 +12,20 @@ type
     procedure   RenderOnMask(var MaskBitmap: TBitmap);
     procedure   RenderOnView(var ViewBitmap: TBitmap);
     function    GetJOSNTypeName: string;
+    function    HistoryCaption: string;
+  end;
+
+  TEmptyAction = class(TInterfacedObject, IAnnotationAction)
+    function    ToJSON(): ISuperObject;
+    procedure   RenderOnMask(var MaskBitmap: TBitmap);
+    procedure   RenderOnView(var ViewBitmap: TBitmap);
+    function    GetJOSNTypeName: string;
+    function    HistoryCaption: string; virtual;
+  end;
+
+  TOriginalImageAction = class(TEmptyAction)
+  public
+    function    HistoryCaption: string; override;
   end;
 
   TDotMarker = class(TInterfacedObject, IAnnotationAction)
@@ -30,10 +44,14 @@ type
     procedure   RenderOnMask(var MaskBitmap: TBitmap);
     procedure   RenderOnView(var ViewBitmap: TBitmap);
     function    GetJOSNTypeName: string;
+    function    HistoryCaption: string;
   end;
 
 
 implementation
+
+uses
+  SysUtils;
 
 { TDotMarker }
 
@@ -60,6 +78,11 @@ begin
   Result:= 'dot_marker';
 end;
 
+function TDotMarker.HistoryCaption: string;
+begin
+  Result:= 'Dot marker at [' + IntToStr(X) + ', ' + IntToStr(Y) + ']';
+end;
+
 procedure TDotMarker.RenderOnMask(var MaskBitmap: TBitmap);
 begin
   MaskBitmap.Canvas.Pixels[X, Y]:= clWhite;
@@ -83,6 +106,40 @@ begin
   Result.S['type']:= GetJOSNTypeName;
   Result.I['x']:= X;
   Result.I['y']:= Y;
+end;
+
+{ TEmptyAction }
+
+function TEmptyAction.GetJOSNTypeName: string;
+begin
+  //
+end;
+
+function TEmptyAction.HistoryCaption: string;
+begin
+  Result:= 'Empty action';
+end;
+
+procedure TEmptyAction.RenderOnMask(var MaskBitmap: TBitmap);
+begin
+  //
+end;
+
+procedure TEmptyAction.RenderOnView(var ViewBitmap: TBitmap);
+begin
+  //
+end;
+
+function TEmptyAction.ToJSON: ISuperObject;
+begin
+  Result:= SO;
+end;
+
+{ TOriginalImageAction }
+
+function TOriginalImageAction.HistoryCaption: string;
+begin
+  Result:= 'Original image';
 end;
 
 end.
