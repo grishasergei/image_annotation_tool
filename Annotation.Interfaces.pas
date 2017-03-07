@@ -7,6 +7,8 @@ uses
 
 type
 
+  TPresentMode = (prmdOriginal, prmdCombined, prmdMask);
+
   TImageInfo = record
     FileName: string;
     Width: integer;
@@ -18,6 +20,7 @@ type
     procedure ShowImageInfo(const ImageInfo: TImageInfo);
     procedure ShowImageCount(const ACurrentIndex, ACount: integer);
     procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>; const ACurrentActionIndex: integer);
+    procedure Clear;
   end;
 
 implementation

@@ -10,6 +10,7 @@ type
   TAnnotatedImageController = class(TObject)
   private
     FView: IImageAnnotationView;
+    FPresentMode: TPresentMode;
     FAnnotatedImages: TObjectList<TAnnotatedImage>;
     FCurrentIndex: integer;
     procedure   AddImage(const AFileName: TFileName);
@@ -18,11 +19,14 @@ type
     procedure   ShowCurrentImage;
     procedure   ShowImageAt(const Index: integer);
     procedure   SaveImageAnnotation(const AnnotatedImage: TAnnotatedImage);
+    procedure   SetPresentMode(const Value: TPresentMode);
+    procedure   CloseImageAt(const AIndex: integer);
   public
     constructor Create(const AView: IImageAnnotationView);
     destructor  Destroy; override;
     // properties
     property    CurrentImage: TAnnotatedImage read GetCurrentImage;
+    property    PresentMode: TPresentMode read FPresentMode write SetPresentMode;
     // methods
     procedure   OpenImages(const AFiles: TStrings);
     procedure   PutMarkerAt(const X, Y, ViewportWidth, ViewportHeight: integer);
@@ -33,6 +37,7 @@ type
     procedure   ClearMarkersOnCurrentImage;
     function    HasUnsavedChanges: boolean;
     procedure   SetAnnotationActionIndex(const AValue: integer);
+    procedure   CloseCurrentImage;
   end;
 
 implementation
@@ -64,11 +69,26 @@ begin
   ShowCurrentImage;
 end;
 
+procedure TAnnotatedImageController.CloseCurrentImage;
+begin
+  CloseImageAt(FCurrentIndex);
+end;
+
+procedure TAnnotatedImageController.CloseImageAt(const AIndex: integer);
+begin
+  if (AIndex < 0) and (AIndex >= FAnnotatedImages.Count) then
+    Exit;
+
+  FAnnotatedImages.Delete(AIndex);
+  SetCurrentImageIndex(AIndex - 1);
+end;
+
 constructor TAnnotatedImageController.Create(const AView: IImageAnnotationView);
 begin
   FAnnotatedImages:= TObjectList<TAnnotatedImage>.Create(True);
   FView:= AView;
   FCurrentIndex:= -1;
+  FPresentMode:= prmdCombined;
 end;
 
 destructor TAnnotatedImageController.Destroy;
@@ -124,8 +144,9 @@ begin
     Exit;
 
   CurrentImage.PutDotMarkerAt(X, Y, ViewportWidth, ViewportHeight);
-  FView.RenderBitmap(CurrentImage.CombinedBitmap);
-  FView.ShowHistory(CurrentImage.AnnotationActions, CurrentImage.CurrentAnnotationActionIndex);
+  ShowCurrentImage;
+  //FView.RenderBitmap(CurrentImage.CombinedBitmap);
+  //FView.ShowHistory(CurrentImage.AnnotationActions, CurrentImage.CurrentAnnotationActionIndex);
 end;
 
 procedure TAnnotatedImageController.SaveAllAnnotations;
@@ -190,6 +211,7 @@ begin
   if FAnnotatedImages.Count = 0 then
   begin
     FCurrentIndex:= -1;
+    FView.Clear;
     Exit;
   end;
 
@@ -203,6 +225,16 @@ begin
   ShowCurrentImage;
 end;
 
+procedure TAnnotatedImageController.SetPresentMode(const Value: TPresentMode);
+begin
+  if Value <> FPresentMode then
+  begin
+    FPresentMode:= Value;
+    ShowCurrentImage;
+  end else
+    FPresentMode := Value;
+end;
+
 procedure TAnnotatedImageController.ShowCurrentImage;
 begin
   ShowImageAt(FCurrentIndex);
@@ -212,7 +244,14 @@ procedure TAnnotatedImageController.ShowImageAt(const Index: integer);
 var
   ImageInfo: TImageInfo;
 begin
-  FView.RenderBitmap(FAnnotatedImages[Index].CombinedBitmap);
+  if (Index >= FAnnotatedImages.Count) or (Index < 0) then
+    Exit;
+
+  case FPresentMode of
+    prmdOriginal: FView.RenderBitmap(FAnnotatedImages[Index].ImageBitmap);
+    prmdCombined: FView.RenderBitmap(FAnnotatedImages[Index].CombinedBitmap);
+    prmdMask: FView.RenderBitmap(FAnnotatedImages[Index].MaskBitmap);
+  end;
 
   ImageInfo.FileName:= FAnnotatedImages[Index].Name;
   ImageInfo.Width:= FAnnotatedImages[Index].Width;

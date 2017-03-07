@@ -56,9 +56,9 @@ begin
   FBitmapImage.Assign(ImageBitmap);
   FAnnotationActions:= Tlist<IAnnotationAction>.Create;
   FName:= Name;
-  FIsChanged:= True;
   FCurrentAnnotationActionIndex:= -1;
   PushAnnotationAction(TOriginalImageAction.Create);
+  FIsChanged:= False;
 end;
 
 procedure TAnnotatedImage.ClearAnnotationActions;
@@ -74,9 +74,9 @@ begin
   FBitmapImage.Assign(ImageGraphic);
   FAnnotationActions:= TList<IAnnotationAction>.Create;
   FName:= Name;
-  FIsChanged:= True;
   FCurrentAnnotationActionIndex:= -1;
   PushAnnotationAction(TOriginalImageAction.Create);
+  FIsChanged:= False;
 end;
 
 destructor TAnnotatedImage.Destroy;

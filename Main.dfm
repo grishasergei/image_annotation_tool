@@ -3,7 +3,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   Top = 0
   Caption = 'Crowd Annotation Tool'
   ClientHeight = 466
-  ClientWidth = 938
+  ClientWidth = 966
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,6 +11,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poDesktopCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -19,7 +20,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   object PanelTop: TPanel
     Left = 0
     Top = 0
-    Width = 938
+    Width = 966
     Height = 35
     Align = alTop
     BevelOuter = bvNone
@@ -82,7 +83,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   object PanelCenter: TPanel
     Left = 89
     Top = 35
-    Width = 647
+    Width = 675
     Height = 390
     Align = alClient
     BevelOuter = bvNone
@@ -91,9 +92,10 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     ShowCaption = False
     TabOrder = 2
     object GridPanelCenterBottom: TGridPanel
-      Left = 0
-      Top = 352
-      Width = 647
+      AlignWithMargins = True
+      Left = 3
+      Top = 349
+      Width = 669
       Height = 38
       Align = alBottom
       BevelOuter = bvNone
@@ -130,17 +132,21 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
           Control = LabelImageCount
           Row = 0
         end>
+      ParentBackground = False
       RowCollection = <
         item
           Value = 100.000000000000000000
+        end
+        item
+          SizeStyle = ssAuto
         end>
       ShowCaption = False
       TabOrder = 0
       object ButtonPrevImage: TButton
         AlignWithMargins = True
-        Left = 132
+        Left = 136
         Top = 3
-        Width = 123
+        Width = 127
         Height = 32
         Action = ActionPreviousImage
         Align = alClient
@@ -154,9 +160,9 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       end
       object ButtonNextImage: TButton
         AlignWithMargins = True
-        Left = 390
+        Left = 402
         Top = 3
-        Width = 123
+        Width = 127
         Height = 32
         Action = ActionNextImage
         Align = alClient
@@ -170,9 +176,9 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       end
       object LabelImageCount: TLabel
         AlignWithMargins = True
-        Left = 261
+        Left = 269
         Top = 3
-        Width = 123
+        Width = 127
         Height = 32
         Align = alClient
         Alignment = taCenter
@@ -182,19 +188,18 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       end
     end
     object GridPanelCenterTop: TGridPanel
-      Left = 0
-      Top = 0
-      Width = 647
-      Height = 20
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
+      Width = 669
+      Height = 25
       Align = alTop
       BevelOuter = bvNone
       Caption = 'GridPanelCenterTop'
+      Color = clAppWorkSpace
       ColumnCollection = <
         item
-          Value = 12.500000000000000000
-        end
-        item
-          Value = 12.500000000000000000
+          Value = 25.000000000000000000
         end
         item
           Value = 50.000000000000000000
@@ -207,10 +212,21 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         end>
       ControlCollection = <
         item
-          Column = 2
+          Column = 1
           Control = LabelCurrentImageFullName
           Row = 0
+        end
+        item
+          Column = 0
+          Control = PanelModeButtons
+          Row = 0
+        end
+        item
+          Column = 3
+          Control = ButtonCloseCurrentImage
+          Row = 0
         end>
+      ParentBackground = False
       RowCollection = <
         item
           Value = 100.000000000000000000
@@ -219,23 +235,90 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       TabOrder = 1
       object LabelCurrentImageFullName: TLabel
         AlignWithMargins = True
-        Left = 163
+        Left = 170
         Top = 3
-        Width = 317
-        Height = 14
+        Width = 328
+        Height = 19
         Align = alClient
         Alignment = taCenter
         Layout = tlCenter
         ExplicitWidth = 3
         ExplicitHeight = 13
       end
+      object PanelModeButtons: TPanel
+        AlignWithMargins = True
+        Left = 0
+        Top = 0
+        Width = 167
+        Height = 25
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alClient
+        BevelOuter = bvNone
+        Caption = 'PanelModeButtons'
+        ShowCaption = False
+        TabOrder = 0
+        object ButtonCombinedMode: TSpeedButton
+          AlignWithMargins = True
+          Left = 1
+          Top = 3
+          Width = 53
+          Height = 19
+          Margins.Left = 1
+          Margins.Right = 1
+          Align = alLeft
+          GroupIndex = 2
+          Down = True
+          Caption = 'Combined'
+          OnClick = ActionPresentationModeCombinedExecute
+        end
+        object ButtonMaskMode: TSpeedButton
+          AlignWithMargins = True
+          Left = 111
+          Top = 3
+          Width = 53
+          Height = 19
+          Margins.Left = 1
+          Margins.Right = 1
+          Align = alLeft
+          GroupIndex = 2
+          Caption = 'Mask'
+          OnClick = ActionPresentationModeMaskExecute
+        end
+        object ButtonOriginalMode: TSpeedButton
+          AlignWithMargins = True
+          Left = 56
+          Top = 3
+          Width = 53
+          Height = 19
+          Margins.Left = 1
+          Margins.Right = 1
+          Align = alLeft
+          GroupIndex = 2
+          Caption = 'Original'
+          OnClick = ActionPresentationModeOriginalExecute
+        end
+      end
+      object ButtonCloseCurrentImage: TButton
+        AlignWithMargins = True
+        Left = 626
+        Top = 3
+        Width = 40
+        Height = 19
+        Action = ActionCloseCurrentImage
+        Align = alRight
+        TabOrder = 1
+        ExplicitLeft = 591
+      end
     end
     object PanelImageContainer: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 23
-      Width = 641
-      Height = 326
+      Top = 34
+      Width = 669
+      Height = 309
       Align = alClient
       BevelOuter = bvNone
       Caption = 'Open an image'
@@ -245,8 +328,8 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       object ImageContainer: TImage
         Left = 0
         Top = 0
-        Width = 641
-        Height = 326
+        Width = 669
+        Height = 309
         Cursor = crCross
         Align = alClient
         Center = True
@@ -260,7 +343,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     end
   end
   object PanelRight: TPanel
-    Left = 736
+    Left = 764
     Top = 35
     Width = 202
     Height = 390
@@ -276,8 +359,8 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Width = 196
       Height = 13
       Align = alTop
-      Caption = 'History'
-      ExplicitWidth = 34
+      Caption = 'Edit History'
+      ExplicitWidth = 55
     end
     object PanelImageInfo: TPanel
       Left = 0
@@ -376,6 +459,9 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Height = 291
       Style = lbOwnerDrawFixed
       Align = alClient
+      BevelInner = bvNone
+      BevelOuter = bvNone
+      Color = clBtnFace
       TabOrder = 1
       OnClick = ListBoxHistoryClick
       OnDrawItem = ListBoxHistoryDrawItem
@@ -384,7 +470,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   object PanelBottom: TPanel
     Left = 0
     Top = 425
-    Width = 938
+    Width = 966
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
@@ -428,6 +514,22 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     object ActionClearMarkers: TAction
       Caption = 'Clear markers'
       OnExecute = ActionClearMarkersExecute
+    end
+    object ActionPresentationModeCombined: TAction
+      Caption = 'Combined'
+      OnExecute = ActionPresentationModeCombinedExecute
+    end
+    object ActionPresentationModeOriginal: TAction
+      Caption = 'Original'
+      OnExecute = ActionPresentationModeOriginalExecute
+    end
+    object ActionPresentationModeMask: TAction
+      Caption = 'Mask'
+      OnExecute = ActionPresentationModeMaskExecute
+    end
+    object ActionCloseCurrentImage: TAction
+      Caption = 'Close'
+      OnExecute = ActionCloseCurrentImageExecute
     end
   end
 end

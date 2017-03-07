@@ -87,7 +87,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdActns, System.Actions,
   Vcl.ActnList, Vcl.ExtDlgs, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.WinXCtrls, Vcl.Buttons, Vcl.Grids, Generics.Collections, Annotation.Interfaces, Main.Controller,
-  Annotation.Action;
+  Annotation.Action, Vcl.ButtonGroup;
 
 type
   TCrowdAnnotationForm = class(TForm, IImageAnnotationView)
@@ -127,6 +127,15 @@ type
     ImageContainer: TImage;
     PanelImageContainer: TPanel;
     ListBoxHistory: TListBox;
+    ButtonCombinedMode: TSpeedButton;
+    ButtonOriginalMode: TSpeedButton;
+    ButtonMaskMode: TSpeedButton;
+    ActionPresentationModeCombined: TAction;
+    ActionPresentationModeOriginal: TAction;
+    ActionPresentationModeMask: TAction;
+    PanelModeButtons: TPanel;
+    ButtonCloseCurrentImage: TButton;
+    ActionCloseCurrentImage: TAction;
     procedure ImageOpenAccept(Sender: TObject);
     procedure ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -141,6 +150,10 @@ type
     procedure ListBoxHistoryClick(Sender: TObject);
     procedure ListBoxHistoryDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
+    procedure ActionPresentationModeCombinedExecute(Sender: TObject);
+    procedure ActionPresentationModeOriginalExecute(Sender: TObject);
+    procedure ActionPresentationModeMaskExecute(Sender: TObject);
+    procedure ActionCloseCurrentImageExecute(Sender: TObject);
   private
     { Private declarations }
     FController: TAnnotatedImageController;
@@ -152,6 +165,7 @@ type
     procedure RenderBitmap(const ABitmap: TBitmap);
     procedure ShowImageCount(const ACurrentIndex, ACount: integer);
     procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>; const ACurrentActionIndex: integer);
+    procedure Clear;
   end;
 
 var
@@ -171,14 +185,42 @@ end;
 
 procedure TCrowdAnnotationForm.ActionClearMarkersExecute(Sender: TObject);
 begin
-  //if MessageDlg('Do you really want to delete all markers? This operation is irreversible.',
-  //               mtConfirmation, mbYesNo, 0) = mrYes then
-    FController.ClearMarkersOnCurrentImage;
+  FController.ClearMarkersOnCurrentImage;
+end;
+
+procedure TCrowdAnnotationForm.ActionCloseCurrentImageExecute(Sender: TObject);
+begin
+  if Assigned(FController.CurrentImage) then
+    if FController.CurrentImage.IsChanged then
+    begin
+      if MessageDlg('There are some unsaved changes. Do you really want to close this image?',
+                    mtConfirmation, mbYesNo, 0) = mrYes then
+        FController.CloseCurrentImage;
+    end else
+      FController.CloseCurrentImage;
 end;
 
 procedure TCrowdAnnotationForm.ActionNextImageExecute(Sender: TObject);
 begin
    FController.NextImage;
+end;
+
+procedure TCrowdAnnotationForm.ActionPresentationModeCombinedExecute(
+  Sender: TObject);
+begin
+  FController.PresentMode:= prmdCombined;
+end;
+
+procedure TCrowdAnnotationForm.ActionPresentationModeMaskExecute(
+  Sender: TObject);
+begin
+  FController.PresentMode:= prmdMask;
+end;
+
+procedure TCrowdAnnotationForm.ActionPresentationModeOriginalExecute(
+  Sender: TObject);
+begin
+  FController.PresentMode:= prmdOriginal;
 end;
 
 procedure TCrowdAnnotationForm.ActionPreviousImageExecute(Sender: TObject);
@@ -189,6 +231,18 @@ end;
 procedure TCrowdAnnotationForm.ActionSaveCurrentAnnotationExecute(Sender: TObject);
 begin
   FController.SaveCurrentAnnotations;
+end;
+
+procedure TCrowdAnnotationForm.Clear;
+begin
+  ListBoxHistory.Clear;
+  LabelImageHeight.Caption:= '';
+  LabelImageWidth.Caption:= '';
+  LabelImageName.Caption:= '';
+  LabelImageCount.Caption:= '';
+  LabelCurrentImageFullName.Caption:= '';
+  ImageContainer.Picture.Bitmap:= nil;
+  PanelImageContainer.ShowCaption:= true;
 end;
 
 procedure TCrowdAnnotationForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
