@@ -17,7 +17,7 @@ type
     procedure RenderBitmap(const ABitmap: TBitmap);
     procedure ShowImageInfo(const ImageInfo: TImageInfo);
     procedure ShowImageCount(const ACurrentIndex, ACount: integer);
-    procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>);
+    procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>; const ACurrentActionIndex: integer);
   end;
 
 implementation

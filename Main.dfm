@@ -374,10 +374,11 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Top = 99
       Width = 202
       Height = 291
+      Style = lbOwnerDrawFixed
       Align = alClient
-      ItemHeight = 13
       TabOrder = 1
       OnClick = ListBoxHistoryClick
+      OnDrawItem = ListBoxHistoryDrawItem
     end
   end
   object PanelBottom: TPanel

@@ -125,8 +125,7 @@ begin
 
   CurrentImage.PutDotMarkerAt(X, Y, ViewportWidth, ViewportHeight);
   FView.RenderBitmap(CurrentImage.CombinedBitmap);
-  FView.ShowHistory(CurrentImage.AnnotationActions);
-  //FView.ShowMarkersList(CurrentImage.Markers);
+  FView.ShowHistory(CurrentImage.AnnotationActions, CurrentImage.CurrentAnnotationActionIndex);
 end;
 
 procedure TAnnotatedImageController.SaveAllAnnotations;
@@ -220,8 +219,7 @@ begin
   ImageInfo.Height:= FAnnotatedImages[Index].Height;
   FView.ShowImageInfo(ImageInfo);
 
-  FView.ShowHistory(CurrentImage.AnnotationActions);
-  //FView.ShowMarkersList(FAnnotatedImages[Index].Markers);
+  FView.ShowHistory(CurrentImage.AnnotationActions, CurrentImage.CurrentAnnotationActionIndex);
 
   FView.ShowImageCount(Index + 1, FAnnotatedImages.Count);
 end;

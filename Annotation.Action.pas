@@ -9,6 +9,7 @@ type
 
   IAnnotationAction = interface
     function    ToJSON(): ISuperObject;
+    procedure   AddToJSONArray(var JSON: ISuperObject; const ArrayName: string);
     procedure   RenderOnMask(var MaskBitmap: TBitmap);
     procedure   RenderOnView(var ViewBitmap: TBitmap);
     function    GetJOSNTypeName: string;
@@ -17,9 +18,10 @@ type
 
   TEmptyAction = class(TInterfacedObject, IAnnotationAction)
     function    ToJSON(): ISuperObject;
-    procedure   RenderOnMask(var MaskBitmap: TBitmap);
-    procedure   RenderOnView(var ViewBitmap: TBitmap);
-    function    GetJOSNTypeName: string;
+    procedure   AddToJSONArray(var JSON: ISuperObject; const ArrayName: string); virtual;
+    procedure   RenderOnMask(var MaskBitmap: TBitmap); virtual;
+    procedure   RenderOnView(var ViewBitmap: TBitmap); virtual;
+    function    GetJOSNTypeName: string; virtual;
     function    HistoryCaption: string; virtual;
   end;
 
@@ -41,12 +43,20 @@ type
     property    Y: integer read FY;
 
     function    ToJSON(): ISuperObject;
+    procedure   AddToJSONArray(var JSON: ISuperObject; const ArrayName: string);
     procedure   RenderOnMask(var MaskBitmap: TBitmap);
     procedure   RenderOnView(var ViewBitmap: TBitmap);
     function    GetJOSNTypeName: string;
     function    HistoryCaption: string;
   end;
 
+  TAnnotationClear = class(TEmptyAction, IAnnotationAction)
+  public
+    procedure   AddToJSONArray(var JSON: ISuperObject; const ArrayName: string);  override;
+    procedure   RenderOnMask(var MaskBitmap: TBitmap); override;
+    procedure   RenderOnView(var ViewBitmap: TBitmap); override;
+    function    HistoryCaption: string; override;
+  end;
 
 implementation
 
@@ -60,6 +70,11 @@ begin
   inherited Create;
   FX:= X;
   FY:= Y;
+end;
+
+procedure TDotMarker.AddToJSONArray(var JSON: ISuperObject; const ArrayName: string);
+begin
+  JSON.A[ArrayName].Add(ToJSON);
 end;
 
 constructor TDotMarker.Create(const APoint: TPoint);
@@ -110,6 +125,11 @@ end;
 
 { TEmptyAction }
 
+procedure TEmptyAction.AddToJSONArray(var JSON: ISuperObject; const ArrayName: string);
+begin
+  //
+end;
+
 function TEmptyAction.GetJOSNTypeName: string;
 begin
   //
@@ -140,6 +160,31 @@ end;
 function TOriginalImageAction.HistoryCaption: string;
 begin
   Result:= 'Original image';
+end;
+
+{ TAnnotationClear }
+
+procedure TAnnotationClear.AddToJSONArray(var JSON: ISuperObject;
+  const ArrayName: string);
+begin
+  JSON.A[ArrayName].Clear(true);
+end;
+
+function TAnnotationClear.HistoryCaption: string;
+begin
+  Result:= 'Clear';
+end;
+
+procedure TAnnotationClear.RenderOnMask(var MaskBitmap: TBitmap);
+begin
+  MaskBitmap.Canvas.Brush.Color:= clBlack;
+  MaskBitmap.Canvas.FillRect(Rect(0, 0, MaskBitmap.Width, MaskBitmap.Height));
+end;
+
+procedure TAnnotationClear.RenderOnView(var ViewBitmap: TBitmap);
+begin
+  ViewBitmap.Canvas.Brush.Color:= clBlack;
+  ViewBitmap.Canvas.FillRect(Rect(0, 0, ViewBitmap.Width, ViewBitmap.Height));
 end;
 
 end.

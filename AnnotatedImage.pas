@@ -27,7 +27,6 @@ type
     destructor  Destroy; override;
     // properties
     property    ImageBitmap: TBitmap read FBitmapImage;
-    //property    AnnotationActionsBitmap: TBitmap read FBitmapAnnotationActions;
     property    CombinedBitmap: TBitmap read GetCombinedBitmap;
     property    MaskBitmap: TBitmap read GetMaskBitmap;
     property    AnnotationActions: TList<IAnnotationAction> read FAnnotationActions;
@@ -36,6 +35,7 @@ type
     property    Name: string read FName;
     property    AnnotationActionsJSON: ISuperObject read GetAnnotationActionsJSON;
     property    IsChanged: boolean read FIsChanged;
+    property    CurrentAnnotationActionIndex: integer read FCurrentAnnotationActionIndex;
     // methods
     procedure   PutDotMarkerAt(const X, Y, ViewportWidth, ViewportHeight: integer);
     procedure   ClearAnnotationActions;
@@ -63,9 +63,9 @@ end;
 
 procedure TAnnotatedImage.ClearAnnotationActions;
 begin
-  FAnnotationActions.Clear;
-  FCurrentAnnotationActionIndex:= -1;
-  PushAnnotationAction(TOriginalImageAction.Create);
+  //FAnnotationActions.Clear;
+  //FCurrentAnnotationActionIndex:= -1;
+  PushAnnotationAction(TAnnotationClear.Create);
 end;
 
 constructor TAnnotatedImage.Create(const ImageGraphic: TGraphic; const Name: string);
@@ -135,7 +135,8 @@ begin
   for i := 0 to FCurrentAnnotationActionIndex do
   begin
     AnnotationAction:= FAnnotationActions[i];
-    Result.A['annotations'].Add(AnnotationAction.ToJSON);
+    AnnotationAction.AddToJSONArray(Result, 'annotations');
+    //Result.A['annotations'].Add(AnnotationAction.ToJSON);
   end;
 end;
 

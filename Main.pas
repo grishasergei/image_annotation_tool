@@ -139,6 +139,8 @@ type
     procedure ActionClearMarkersExecute(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure ListBoxHistoryClick(Sender: TObject);
+    procedure ListBoxHistoryDrawItem(Control: TWinControl; Index: Integer;
+      Rect: TRect; State: TOwnerDrawState);
   private
     { Private declarations }
     FController: TAnnotatedImageController;
@@ -149,7 +151,7 @@ type
     procedure ShowImageInfo(const ImageInfo: TImageInfo);
     procedure RenderBitmap(const ABitmap: TBitmap);
     procedure ShowImageCount(const ACurrentIndex, ACount: integer);
-    procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>);
+    procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>; const ACurrentActionIndex: integer);
   end;
 
 var
@@ -169,8 +171,8 @@ end;
 
 procedure TCrowdAnnotationForm.ActionClearMarkersExecute(Sender: TObject);
 begin
-  if MessageDlg('Do you really want to delete all markers? This operation is irreversible.',
-                 mtConfirmation, mbYesNo, 0) = mrYes then
+  //if MessageDlg('Do you really want to delete all markers? This operation is irreversible.',
+  //               mtConfirmation, mbYesNo, 0) = mrYes then
     FController.ClearMarkersOnCurrentImage;
 end;
 
@@ -223,9 +225,17 @@ end;
 procedure TCrowdAnnotationForm.ListBoxHistoryClick(Sender: TObject);
 begin
   FController.SetAnnotationActionIndex(ListBoxHistory.ItemIndex);
-  ListBoxHistory.OnClick:= nil;
-  ListBoxHistory.Selected[ListBoxHistory.ItemIndex]:= true;
-  ListBoxHistory.OnClick:= ListBoxHistoryClick;
+end;
+
+procedure TCrowdAnnotationForm.ListBoxHistoryDrawItem(Control: TWinControl;
+  Index: Integer; Rect: TRect; State: TOwnerDrawState);
+begin
+  with Control as TListBox do
+  begin
+    Canvas.FillRect(Rect);
+    Canvas.Font.Color := TColor(Items.Objects[Index]);
+    Canvas.TextOut(Rect.Left + 2, Rect.Top, Items[Index]);
+  end;
 end;
 
 procedure TCrowdAnnotationForm.LoadImage(const FileName: TStrings);
@@ -240,13 +250,26 @@ begin
 end;
 
 procedure TCrowdAnnotationForm.ShowHistory(
-  const AnnotationActions: TList<IAnnotationAction>);
+  const AnnotationActions: TList<IAnnotationAction>; const ACurrentActionIndex: integer);
 var
   AnnotationAction: IAnnotationAction;
+  var i: integer;
 begin
   ListBoxHistory.Clear;
-  for AnnotationAction in AnnotationActions do
-    ListBoxHistory.Items.Add(AnnotationAction.HistoryCaption);
+
+  for i := 0 to ACurrentActionIndex do
+  begin
+    AnnotationAction:= AnnotationActions[i];
+    ListBoxHistory.Items.AddObject(AnnotationAction.HistoryCaption, pointer(clBlack));
+  end;
+
+  for i := ACurrentActionIndex + 1 to AnnotationActions.Count - 1 do
+  begin
+    AnnotationAction:= AnnotationActions[i];
+    ListBoxHistory.Items.AddObject(AnnotationAction.HistoryCaption, pointer(clGray));
+  end;
+
+  ListBoxHistory.ItemIndex:= ACurrentActionIndex;
 end;
 
 procedure TCrowdAnnotationForm.ShowImageCount(const ACurrentIndex, ACount: integer);
