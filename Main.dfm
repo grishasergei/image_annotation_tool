@@ -11,7 +11,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -453,10 +453,11 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       end
     end
     object ListBoxHistory: TListBox
-      Left = 0
-      Top = 99
-      Width = 202
-      Height = 291
+      AlignWithMargins = True
+      Left = 3
+      Top = 102
+      Width = 196
+      Height = 285
       Style = lbOwnerDrawFixed
       Align = alClient
       BevelInner = bvNone
@@ -465,6 +466,8 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       TabOrder = 1
       OnClick = ListBoxHistoryClick
       OnDrawItem = ListBoxHistoryDrawItem
+      ExplicitWidth = 202
+      ExplicitHeight = 291
     end
   end
   object PanelBottom: TPanel
