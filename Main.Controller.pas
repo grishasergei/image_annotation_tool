@@ -38,12 +38,13 @@ type
     function    HasUnsavedChanges: boolean;
     procedure   SetAnnotationActionIndex(const AValue: integer);
     procedure   CloseCurrentImage;
+    procedure   LoadAnnotationsToCurrentImage(const AFileName: TFileName);
   end;
 
 implementation
 
 uses
-  Vcl.Graphics, superobject, JPeg, math;
+  Vcl.Graphics, superobject, JPeg, math, IOUtils;
 
 { TAnnotatedImageController }
 
@@ -117,6 +118,19 @@ begin
     end;
 end;
 
+procedure TAnnotatedImageController.LoadAnnotationsToCurrentImage(
+  const AFileName: TFileName);
+var
+  AnnotationsJSON: ISuperObject;
+begin
+  if not Assigned(CurrentImage) then
+    exit;
+
+  AnnotationsJSON:= SO(TFile.ReadAllText(AFileName));
+  CurrentImage.LoadAnnotationsFromJSON(AnnotationsJSON.A['annotations']);
+  ShowCurrentImage;
+end;
+
 procedure TAnnotatedImageController.NextImage;
 begin
   SetCurrentImageIndex(FCurrentIndex + 1);
@@ -145,8 +159,6 @@ begin
 
   CurrentImage.PutDotMarkerAt(X, Y, ViewportWidth, ViewportHeight);
   ShowCurrentImage;
-  //FView.RenderBitmap(CurrentImage.CombinedBitmap);
-  //FView.ShowHistory(CurrentImage.AnnotationActions, CurrentImage.CurrentAnnotationActionIndex);
 end;
 
 procedure TAnnotatedImageController.SaveAllAnnotations;

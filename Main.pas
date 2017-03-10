@@ -136,6 +136,8 @@ type
     PanelModeButtons: TPanel;
     ButtonCloseCurrentImage: TButton;
     ActionCloseCurrentImage: TAction;
+    ButtonLoadAnnotations: TButton;
+    ActionLoadAnnotations: TFileOpen;
     procedure ImageOpenAccept(Sender: TObject);
     procedure ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -154,6 +156,7 @@ type
     procedure ActionPresentationModeOriginalExecute(Sender: TObject);
     procedure ActionPresentationModeMaskExecute(Sender: TObject);
     procedure ActionCloseCurrentImageExecute(Sender: TObject);
+    procedure ActionLoadAnnotationsAccept(Sender: TObject);
   private
     { Private declarations }
     FController: TAnnotatedImageController;
@@ -198,6 +201,11 @@ begin
         FController.CloseCurrentImage;
     end else
       FController.CloseCurrentImage;
+end;
+
+procedure TCrowdAnnotationForm.ActionLoadAnnotationsAccept(Sender: TObject);
+begin
+  FController.LoadAnnotationsToCurrentImage((Sender as TFileOpen).Dialog.FileName);
 end;
 
 procedure TCrowdAnnotationForm.ActionNextImageExecute(Sender: TObject);

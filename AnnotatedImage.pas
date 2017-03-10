@@ -41,6 +41,7 @@ type
     procedure   ClearAnnotationActions;
     procedure   OnSaved;
     procedure   SetAnnotationActionIndex(const Value: integer);
+    procedure   LoadAnnotationsFromJSON(const AnnotationsArray: TSuperArray);
   end;
 
 implementation
@@ -162,6 +163,19 @@ end;
 function TAnnotatedImage.GetWidth: integer;
 begin
   Result:= FBitmapImage.Height;
+end;
+
+procedure TAnnotatedImage.LoadAnnotationsFromJSON(
+  const AnnotationsArray: TSuperArray);
+var
+  i: integer;
+begin
+  FAnnotationActions.Clear;
+  FCurrentAnnotationActionIndex:= -1;
+  PushAnnotationAction(TOriginalImageAction.Create);
+  for i := 0 to AnnotationsArray.Length - 1 do
+    if CompareText(AnnotationsArray[i].S['type'], 'dot_marker') = 0 then
+      PushAnnotationAction(TDotMarker.Create(AnnotationsArray[i].I['x'], AnnotationsArray[i].I['y']));
 end;
 
 procedure TAnnotatedImage.OnSaved;

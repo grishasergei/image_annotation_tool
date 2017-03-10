@@ -39,6 +39,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     Caption = 'PanelLeft'
     ShowCaption = False
     TabOrder = 1
+    ExplicitTop = 41
     object ButtonOpenImage: TButton
       AlignWithMargins = True
       Left = 3
@@ -52,32 +53,46 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     object ButtonSave: TButton
       AlignWithMargins = True
       Left = 3
-      Top = 39
+      Top = 75
       Width = 83
       Height = 30
       Action = ActionSaveCurrentAnnotation
       Align = alTop
       TabOrder = 1
+      ExplicitTop = 39
     end
     object ButtonSaveAll: TButton
-      AlignWithMargins = True
-      Left = 3
-      Top = 75
-      Width = 83
-      Height = 30
-      Action = ActionSaveAllAnnotations
-      Align = alTop
-      TabOrder = 2
-    end
-    object ButtonClearMarkers: TButton
       AlignWithMargins = True
       Left = 3
       Top = 111
       Width = 83
       Height = 30
+      Action = ActionSaveAllAnnotations
+      Align = alTop
+      TabOrder = 2
+      ExplicitTop = 75
+    end
+    object ButtonClearMarkers: TButton
+      AlignWithMargins = True
+      Left = 3
+      Top = 147
+      Width = 83
+      Height = 30
       Action = ActionClearMarkers
       Align = alTop
       TabOrder = 3
+      ExplicitTop = 111
+    end
+    object ButtonLoadAnnotations: TButton
+      AlignWithMargins = True
+      Left = 3
+      Top = 39
+      Width = 83
+      Height = 30
+      Action = ActionLoadAnnotations
+      Align = alTop
+      TabOrder = 4
+      ExplicitTop = 15
     end
   end
   object PanelCenter: TPanel
@@ -310,7 +325,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         Action = ActionCloseCurrentImage
         Align = alRight
         TabOrder = 1
-        ExplicitLeft = 591
       end
     end
     object PanelImageContainer: TPanel
@@ -466,8 +480,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       TabOrder = 1
       OnClick = ListBoxHistoryClick
       OnDrawItem = ListBoxHistoryDrawItem
-      ExplicitWidth = 202
-      ExplicitHeight = 291
     end
   end
   object PanelBottom: TPanel
@@ -533,6 +545,15 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     object ActionCloseCurrentImage: TAction
       Caption = 'Close'
       OnExecute = ActionCloseCurrentImageExecute
+    end
+    object ActionLoadAnnotations: TFileOpen
+      Category = 'File'
+      Caption = 'Annotations...'
+      Dialog.Filter = 'JSON|*.txt'
+      Hint = 'Open|Opens an existing file'
+      ImageIndex = 7
+      ShortCut = 16463
+      OnAccept = ActionLoadAnnotationsAccept
     end
   end
 end
