@@ -42,12 +42,13 @@ type
     procedure   OnSaved;
     procedure   SetAnnotationActionIndex(const Value: integer);
     procedure   LoadAnnotationsFromJSON(const AnnotationsArray: TSuperArray);
+    function    GetPatch(const X, Y, Width, Height, ViewPortWidth, ViewPortHeight: integer): TBitmap;
   end;
 
 implementation
 
 uses
-  Annotation.Utils, SysUtils;
+  Annotation.Utils, SysUtils, Math;
 
 { TAnnotatedImage }
 
@@ -157,6 +158,75 @@ begin
   begin
     AnnotationAction:= FAnnotationActions[i];
     AnnotationAction.RenderOnMask(Result);
+  end;
+end;
+
+function TAnnotatedImage.GetPatch(const X, Y, Width, Height, ViewPortWidth, ViewPortHeight: integer): TBitmap;
+var
+  PointOnImage: TPoint;
+  DestRect, SourceRect: TRect;
+  Top, Bottom: TPoint;
+  XOffset, YOffset: integer;
+  PaddedBitmap, BitmapWithMarkers: TBitmap;
+  CenterPoint: TPoint;
+begin
+  Result:= TBitmap.Create;
+  Result.SetSize(Width, Height);
+  Result.Canvas.Brush.Color:= clBtnHighlight;
+  Result.Canvas.FillRect(Rect(0, 0, Width, Height));
+
+  if IsOnImage(TPoint.Create(X, Y), ViewportWidth, ViewportHeight, FBitmapImage.Width, FBitmapImage.Height) then
+  begin
+    PointOnImage:= ViewportToImage(TPoint.Create(X, Y),
+                                   ViewportWidth, ViewportHeight,
+                                   FBitmapImage.Width, FBitmapImage.Height);
+
+    PaddedBitmap:= TBitmap.Create;
+    try
+      PaddedBitmap.SetSize(FBitmapImage.Width + Width, FBitmapImage.Height + Height);
+      PaddedBitmap.Canvas.Brush.Color:= clBtnHighlight;
+      PaddedBitmap.Canvas.FillRect(Rect(0, 0, PaddedBitmap.Width, PaddedBitmap.Height));
+
+      XOffset:= Width div 2;
+      YOffset:= Height div 2;
+
+      DestRect:= TRect.Create(Tpoint.Create(XOffset, YOffset),
+                              TPoint.Create(PaddedBitmap.Width - XOffset,
+                                            PaddedBitmap.Height - YOffset));
+      SourceRect:= TRect.Create(TPoint.Zero, TPoint.Create(FBitmapImage.Width, FBitmapImage.Height));
+      BitmapWithMarkers:= CombinedBitmap;
+      PaddedBitmap.Canvas.CopyRect(DestRect, BitmapWithMarkers.Canvas, SourceRect);
+      BitmapWithMarkers.Free;
+
+      PointOnImage.X:= PointOnImage.X + XOffset;
+      PointOnImage.Y:= PointOnImage.Y + YOffset;
+
+      XOffset:= Width div 4;
+      YOffset:= Height div 4;
+
+      DestRect:= TRect.Create(TPoint.Zero, TPoint.Create(Width, Height));
+      SourceRect:= TRect.Create(TPoint.Create(PointOnImage.X - XOffset,
+                                              PointOnImage.Y - YOffset),
+                                TPoint.Create(PointOnImage.X + XOffset,
+                                              PointOnImage.Y + YOffset));
+
+      Result.Canvas.CopyRect(DestRect, PaddedBitmap.Canvas, SourceRect);
+
+      CenterPoint:= TPoint.Zero;
+      CenterPoint.X:= Width div 2;
+      CenterPoint.Y:= Height div 2;
+
+      Result.Canvas.Pen.Color:= $0EF729;
+      Result.Canvas.Pen.Width:= 2;
+
+      Result.Canvas.MoveTo(CenterPoint.X, CenterPoint.Y - 15);
+      Result.Canvas.LineTo(CenterPoint.X, CenterPoint.Y + 15);
+
+      Result.Canvas.MoveTo(CenterPoint.X - 15, CenterPoint.Y);
+      Result.Canvas.LineTo(CenterPoint.X +  15, CenterPoint.Y);
+    finally
+      PaddedBitmap.Free;
+    end;
   end;
 end;
 

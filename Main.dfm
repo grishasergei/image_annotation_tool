@@ -2,7 +2,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   Left = 0
   Top = 0
   Caption = 'Crowd Annotation Tool'
-  ClientHeight = 466
+  ClientHeight = 547
   ClientWidth = 966
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -33,13 +33,12 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     Left = 0
     Top = 35
     Width = 89
-    Height = 390
+    Height = 471
     Align = alLeft
     BevelOuter = bvNone
     Caption = 'PanelLeft'
     ShowCaption = False
     TabOrder = 1
-    ExplicitTop = 41
     object ButtonOpenImage: TButton
       AlignWithMargins = True
       Left = 3
@@ -59,7 +58,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Action = ActionSaveCurrentAnnotation
       Align = alTop
       TabOrder = 1
-      ExplicitTop = 39
     end
     object ButtonSaveAll: TButton
       AlignWithMargins = True
@@ -70,7 +68,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Action = ActionSaveAllAnnotations
       Align = alTop
       TabOrder = 2
-      ExplicitTop = 75
     end
     object ButtonClearMarkers: TButton
       AlignWithMargins = True
@@ -81,7 +78,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Action = ActionClearMarkers
       Align = alTop
       TabOrder = 3
-      ExplicitTop = 111
     end
     object ButtonLoadAnnotations: TButton
       AlignWithMargins = True
@@ -92,14 +88,13 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Action = ActionLoadAnnotations
       Align = alTop
       TabOrder = 4
-      ExplicitTop = 15
     end
   end
   object PanelCenter: TPanel
     Left = 89
     Top = 35
     Width = 675
-    Height = 390
+    Height = 471
     Align = alClient
     BevelOuter = bvNone
     Caption = 'Panel1'
@@ -109,7 +104,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     object GridPanelCenterBottom: TGridPanel
       AlignWithMargins = True
       Left = 3
-      Top = 349
+      Top = 430
       Width = 669
       Height = 38
       Align = alBottom
@@ -332,7 +327,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Left = 3
       Top = 34
       Width = 669
-      Height = 309
+      Height = 390
       Align = alClient
       BevelOuter = bvNone
       Caption = 'Open an image'
@@ -343,16 +338,46 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         Left = 0
         Top = 0
         Width = 669
-        Height = 309
+        Height = 390
         Cursor = crCross
         Align = alClient
         Center = True
         Proportional = True
         OnMouseDown = ImageContainer_MouseDown
+        OnMouseLeave = ImageContainerMouseLeave
+        OnMouseMove = ImageContainerMouseMove
         ExplicitLeft = 400
         ExplicitTop = 160
         ExplicitWidth = 105
         ExplicitHeight = 105
+      end
+      object PanelMagnifier: TPanel
+        Left = 424
+        Top = 248
+        Width = 97
+        Height = 73
+        BevelOuter = bvNone
+        Caption = 'PanelMagnifier'
+        Color = clHighlight
+        ParentBackground = False
+        ShowCaption = False
+        TabOrder = 0
+        Visible = False
+        object ImageMagnifier: TImage
+          AlignWithMargins = True
+          Left = 3
+          Top = 3
+          Width = 91
+          Height = 67
+          Align = alClient
+          Center = True
+          Proportional = True
+          Stretch = True
+          ExplicitLeft = 16
+          ExplicitTop = 24
+          ExplicitWidth = 105
+          ExplicitHeight = 105
+        end
       end
     end
   end
@@ -360,7 +385,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     Left = 764
     Top = 35
     Width = 202
-    Height = 390
+    Height = 471
     Align = alRight
     BevelOuter = bvNone
     Caption = 'Panel1'
@@ -369,7 +394,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     object LabelHistoryCaption: TLabel
       AlignWithMargins = True
       Left = 3
-      Top = 83
+      Top = 224
       Width = 196
       Height = 13
       Align = alTop
@@ -378,7 +403,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     end
     object PanelImageInfo: TPanel
       Left = 0
-      Top = 0
+      Top = 141
       Width = 202
       Height = 80
       Align = alTop
@@ -469,9 +494,9 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     object ListBoxHistory: TListBox
       AlignWithMargins = True
       Left = 3
-      Top = 102
+      Top = 243
       Width = 196
-      Height = 285
+      Height = 225
       Style = lbOwnerDrawFixed
       Align = alClient
       BevelInner = bvNone
@@ -481,10 +506,36 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       OnClick = ListBoxHistoryClick
       OnDrawItem = ListBoxHistoryDrawItem
     end
+    object PanelZoomBox: TPanel
+      Left = 0
+      Top = 0
+      Width = 202
+      Height = 141
+      Align = alTop
+      BevelOuter = bvNone
+      Caption = 'PanelZoomBox'
+      ShowCaption = False
+      TabOrder = 2
+      object ImageZoomBox: TImage
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 196
+        Height = 135
+        Align = alClient
+        Center = True
+        Proportional = True
+        Stretch = True
+        ExplicitLeft = 72
+        ExplicitTop = 16
+        ExplicitWidth = 105
+        ExplicitHeight = 105
+      end
+    end
   end
   object PanelBottom: TPanel
     Left = 0
-    Top = 425
+    Top = 506
     Width = 966
     Height = 41
     Align = alBottom

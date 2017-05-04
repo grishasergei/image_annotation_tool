@@ -138,6 +138,10 @@ type
     ActionCloseCurrentImage: TAction;
     ButtonLoadAnnotations: TButton;
     ActionLoadAnnotations: TFileOpen;
+    PanelZoomBox: TPanel;
+    ImageZoomBox: TImage;
+    PanelMagnifier: TPanel;
+    ImageMagnifier: TImage;
     procedure ImageOpenAccept(Sender: TObject);
     procedure ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -157,6 +161,9 @@ type
     procedure ActionPresentationModeMaskExecute(Sender: TObject);
     procedure ActionCloseCurrentImageExecute(Sender: TObject);
     procedure ActionLoadAnnotationsAccept(Sender: TObject);
+    procedure ImageContainerMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure ImageContainerMouseLeave(Sender: TObject);
   private
     { Private declarations }
     FController: TAnnotatedImageController;
@@ -166,6 +173,7 @@ type
     { Public declarations }
     procedure ShowImageInfo(const ImageInfo: TImageInfo);
     procedure RenderBitmap(const ABitmap: TBitmap);
+    procedure RenderZoomBox(const ABitmap: TBitmap);
     procedure ShowImageCount(const ACurrentIndex, ACount: integer);
     procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>; const ACurrentActionIndex: integer);
     procedure Clear;
@@ -273,6 +281,22 @@ begin
   FController.Free;
 end;
 
+procedure TCrowdAnnotationForm.ImageContainerMouseLeave(Sender: TObject);
+begin
+  //PanelMagnifier.Visible:= False;
+end;
+
+procedure TCrowdAnnotationForm.ImageContainerMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  //PanelMagnifier.Top:= Y + 5;
+  //PanelMagnifier.Left:= X + 5;
+  //PanelMagnifier.Visible:= True;
+  OutputDebugString(PChar('Triggered'));
+  FController.ShowZoomPatch(X, Y, ImageZoomBox.Width, ImageZoomBox.Height,
+                            ImageContainer.Width, ImageContainer.Height);
+end;
+
 procedure TCrowdAnnotationForm.ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
@@ -309,6 +333,12 @@ procedure TCrowdAnnotationForm.RenderBitmap(const ABitmap: TBitmap);
 begin
   ImageContainer.Picture.Bitmap.Assign(ABitmap);
   PanelImageContainer.ShowCaption:= false;
+end;
+
+procedure TCrowdAnnotationForm.RenderZoomBox(const ABitmap: TBitmap);
+begin
+  ImageZoomBox.Picture.Bitmap.SetSize(ABitmap.Width, ABitmap.Height);
+  ImageZoomBox.Picture.Bitmap.Canvas.Draw(0, 0, ABitmap);
 end;
 
 procedure TCrowdAnnotationForm.ShowHistory(

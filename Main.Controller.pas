@@ -39,12 +39,13 @@ type
     procedure   SetAnnotationActionIndex(const AValue: integer);
     procedure   CloseCurrentImage;
     procedure   LoadAnnotationsToCurrentImage(const AFileName: TFileName);
+    procedure   ShowZoomPatch(const X, Y, Width, Height, ViewPortWidth, ViewPortHeight: integer);
   end;
 
 implementation
 
 uses
-  Vcl.Graphics, superobject, JPeg, math, IOUtils;
+  Vcl.Graphics, superobject, JPeg, math, IOUtils, Windows;
 
 { TAnnotatedImageController }
 
@@ -258,7 +259,7 @@ var
 begin
   if (Index >= FAnnotatedImages.Count) or (Index < 0) then
     Exit;
-
+  // Fix a memory leak. Do like in ShowZoomPatch
   case FPresentMode of
     prmdOriginal: FView.RenderBitmap(FAnnotatedImages[Index].ImageBitmap);
     prmdCombined: FView.RenderBitmap(FAnnotatedImages[Index].CombinedBitmap);
@@ -273,6 +274,29 @@ begin
   FView.ShowHistory(CurrentImage.AnnotationActions, CurrentImage.CurrentAnnotationActionIndex);
 
   FView.ShowImageCount(Index + 1, FAnnotatedImages.Count);
+end;
+
+procedure TAnnotatedImageController.ShowZoomPatch(const X, Y, Width,
+  Height, ViewPortWidth, ViewPortHeight: integer);
+var
+  Bitmap: Vcl.Graphics.TBitmap;
+  Freq, StartCount, StopCount: Int64;
+  TimingSeconds: real;
+begin
+  if Assigned(CurrentImage) then
+  begin
+    QueryPerformanceFrequency(Freq);
+    QueryPerformanceCounter(StartCount);
+    Bitmap:= CurrentImage.GetPatch(X, Y, Width, Height, ViewPortWidth, ViewPortHeight);
+    QueryPerformanceCounter(StopCount);
+    TimingSeconds := (StopCount - StartCount) / Freq;
+    OutputDebugString(PChar('Used time: ' + FloatToStr(TimingSeconds)));
+    try
+      FView.RenderZoomBox(Bitmap);
+    finally
+      Bitmap.Free;
+    end;
+  end;
 end;
 
 end.
