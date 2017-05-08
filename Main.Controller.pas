@@ -3,7 +3,8 @@ unit Main.Controller;
 interface
 
 uses
-  AnnotatedImage, Annotation.Interfaces, SysUtils, Classes, Generics.Collections;
+  AnnotatedImage, Annotation.Interfaces, SysUtils, Classes, Generics.Collections,
+  Vcl.Graphics;
 
 type
 
@@ -39,13 +40,13 @@ type
     procedure   SetAnnotationActionIndex(const AValue: integer);
     procedure   CloseCurrentImage;
     procedure   LoadAnnotationsToCurrentImage(const AFileName: TFileName);
-    procedure   ShowZoomPatch(const X, Y, Width, Height, ViewPortWidth, ViewPortHeight: integer);
+    procedure   ShowZoomPatch(const X, Y, Width, Height, ViewPortWidth, ViewPortHeight: integer; SourceBitmap: TBitmap);
   end;
 
 implementation
 
 uses
-  Vcl.Graphics, superobject, JPeg, math, IOUtils, Windows;
+  superobject, JPeg, math, IOUtils, Windows;
 
 { TAnnotatedImageController }
 
@@ -277,20 +278,15 @@ begin
 end;
 
 procedure TAnnotatedImageController.ShowZoomPatch(const X, Y, Width,
-  Height, ViewPortWidth, ViewPortHeight: integer);
+  Height, ViewPortWidth, ViewPortHeight: integer; SourceBitmap: Vcl.Graphics.TBitmap);
 var
   Bitmap: Vcl.Graphics.TBitmap;
-  Freq, StartCount, StopCount: Int64;
-  TimingSeconds: real;
 begin
   if Assigned(CurrentImage) then
   begin
-    QueryPerformanceFrequency(Freq);
-    QueryPerformanceCounter(StartCount);
-    Bitmap:= CurrentImage.GetPatch(X, Y, Width, Height, ViewPortWidth, ViewPortHeight);
-    QueryPerformanceCounter(StopCount);
-    TimingSeconds := (StopCount - StartCount) / Freq;
-    OutputDebugString(PChar('Used time: ' + FloatToStr(TimingSeconds)));
+    Bitmap:= TAnnotatedImage.GetPatch(X, Y, Width, Height,
+                                      ViewPortWidth, ViewPortHeight,
+                                      SourceBitmap);
     try
       FView.RenderZoomBox(Bitmap);
     finally

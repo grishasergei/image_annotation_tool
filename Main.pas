@@ -292,9 +292,9 @@ begin
   //PanelMagnifier.Top:= Y + 5;
   //PanelMagnifier.Left:= X + 5;
   //PanelMagnifier.Visible:= True;
-  OutputDebugString(PChar('Triggered'));
   FController.ShowZoomPatch(X, Y, ImageZoomBox.Width, ImageZoomBox.Height,
-                            ImageContainer.Width, ImageContainer.Height);
+                            ImageContainer.Width, ImageContainer.Height,
+                            ImageContainer.Picture.Bitmap);
 end;
 
 procedure TCrowdAnnotationForm.ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;

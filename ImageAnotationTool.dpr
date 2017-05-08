@@ -14,6 +14,7 @@ uses
 {$R *.res}
 
 begin
+  System.ReportMemoryLeaksOnShutdown:= true;
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TCrowdAnnotationForm, CrowdAnnotationForm);
