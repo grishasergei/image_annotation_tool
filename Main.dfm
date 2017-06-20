@@ -15,6 +15,8 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnMouseWheelDown = FormMouseWheelDown
+  OnMouseWheelUp = FormMouseWheelUp
   PixelsPerInch = 96
   TextHeight = 13
   object PanelTop: TPanel
@@ -308,6 +310,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
           Align = alLeft
           GroupIndex = 2
           Caption = 'Original'
+          Visible = False
           OnClick = ActionPresentationModeOriginalExecute
         end
       end
@@ -344,7 +347,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         Center = True
         Proportional = True
         OnMouseDown = ImageContainer_MouseDown
-        OnMouseLeave = ImageContainerMouseLeave
         OnMouseMove = ImageContainerMouseMove
         ExplicitLeft = 400
         ExplicitTop = 160
@@ -352,10 +354,10 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         ExplicitHeight = 105
       end
       object PanelMagnifier: TPanel
-        Left = 424
-        Top = 248
-        Width = 97
-        Height = 73
+        Left = 376
+        Top = 224
+        Width = 145
+        Height = 97
         BevelOuter = bvNone
         Caption = 'PanelMagnifier'
         Color = clHighlight
@@ -365,18 +367,22 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         Visible = False
         object ImageMagnifier: TImage
           AlignWithMargins = True
-          Left = 3
-          Top = 3
-          Width = 91
-          Height = 67
+          Left = 0
+          Top = 0
+          Width = 145
+          Height = 97
+          Margins.Left = 0
+          Margins.Top = 0
+          Margins.Right = 0
+          Margins.Bottom = 0
           Align = alClient
           Center = True
           Proportional = True
           Stretch = True
-          ExplicitLeft = 16
+          ExplicitLeft = 32
           ExplicitTop = 24
-          ExplicitWidth = 105
-          ExplicitHeight = 105
+          ExplicitWidth = 110
+          ExplicitHeight = 70
         end
       end
     end
@@ -521,15 +527,27 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         Left = 3
         Top = 3
         Width = 196
-        Height = 135
+        Height = 106
         Align = alClient
         Center = True
         Proportional = True
         Stretch = True
-        ExplicitLeft = 72
-        ExplicitTop = 16
-        ExplicitWidth = 105
-        ExplicitHeight = 105
+        ExplicitHeight = 118
+      end
+      object TrackBarZoomFactor: TTrackBar
+        Left = 0
+        Top = 112
+        Width = 202
+        Height = 29
+        Align = alBottom
+        Min = 1
+        ParentShowHint = False
+        Position = 2
+        PositionToolTip = ptBottom
+        ShowHint = False
+        TabOrder = 0
+        TickStyle = tsNone
+        OnChange = ActionZoomFactorChangeExecute
       end
     end
   end
@@ -605,6 +623,10 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       ImageIndex = 7
       ShortCut = 16463
       OnAccept = ActionLoadAnnotationsAccept
+    end
+    object ActionZoomFactorChange: TAction
+      Caption = 'ActionZoomFactorChange'
+      OnExecute = ActionZoomFactorChangeExecute
     end
   end
 end

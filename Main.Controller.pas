@@ -14,6 +14,7 @@ type
     FPresentMode: TPresentMode;
     FAnnotatedImages: TObjectList<TAnnotatedImage>;
     FCurrentIndex: integer;
+    FZoomFactor:  Byte;
     procedure   AddImage(const AFileName: TFileName);
     function    GetCurrentImage: TAnnotatedImage;
     procedure   SetCurrentImageIndex(const Value: integer);
@@ -22,12 +23,14 @@ type
     procedure   SaveImageAnnotation(const AnnotatedImage: TAnnotatedImage);
     procedure   SetPresentMode(const Value: TPresentMode);
     procedure   CloseImageAt(const AIndex: integer);
+    procedure   SetZoomFactor(const Value: Byte);
   public
     constructor Create(const AView: IImageAnnotationView);
     destructor  Destroy; override;
     // properties
     property    CurrentImage: TAnnotatedImage read GetCurrentImage;
     property    PresentMode: TPresentMode read FPresentMode write SetPresentMode;
+    property    ZoomFactor: Byte read FZoomFactor write SetZoomFactor;
     // methods
     procedure   OpenImages(const AFiles: TStrings);
     procedure   PutMarkerAt(const X, Y, ViewportWidth, ViewportHeight: integer);
@@ -92,6 +95,7 @@ begin
   FView:= AView;
   FCurrentIndex:= -1;
   FPresentMode:= prmdCombined;
+  FZoomFactor:= 2;
 end;
 
 destructor TAnnotatedImageController.Destroy;
@@ -249,6 +253,12 @@ begin
     FPresentMode := Value;
 end;
 
+procedure TAnnotatedImageController.SetZoomFactor(const Value: Byte);
+begin
+  if (Value >= 1) and (Value <= 10) then
+    FZoomFactor := Value;
+end;
+
 procedure TAnnotatedImageController.ShowCurrentImage;
 begin
   ShowImageAt(FCurrentIndex);
@@ -286,6 +296,7 @@ begin
   begin
     Bitmap:= TAnnotatedImage.GetPatch(X, Y, Width, Height,
                                       ViewPortWidth, ViewPortHeight,
+                                      ZoomFactor,
                                       SourceBitmap);
     try
       FView.RenderZoomBox(Bitmap);

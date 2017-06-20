@@ -104,15 +104,21 @@ begin
 end;
 
 procedure TDotMarker.RenderOnView(var ViewBitmap: TBitmap);
+var
+  PenWidth,
+  StrokeLength: integer;
 begin
+  PenWidth:= 2;
+  StrokeLength:= 10;
+
   ViewBitmap.Canvas.Pen.Color:= clRed;
-  ViewBitmap.Canvas.Pen.Width:= 2;
+  ViewBitmap.Canvas.Pen.Width:= PenWidth;
 
-  ViewBitmap.Canvas.MoveTo(X, Y - 10);
-  ViewBitmap.Canvas.LineTo(X, Y + 10);
+  ViewBitmap.Canvas.MoveTo(X, Y - StrokeLength);
+  ViewBitmap.Canvas.LineTo(X, Y + StrokeLength);
 
-  ViewBitmap.Canvas.MoveTo(X - 10, Y);
-  ViewBitmap.Canvas.LineTo(X +  10, Y);
+  ViewBitmap.Canvas.MoveTo(X - StrokeLength, Y);
+  ViewBitmap.Canvas.LineTo(X +  StrokeLength, Y);
 end;
 
 function TDotMarker.ToJSON(): ISuperObject;

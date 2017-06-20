@@ -44,6 +44,7 @@ type
     procedure   LoadAnnotationsFromJSON(const AnnotationsArray: TSuperArray);
     class function    GetPatch(const X, Y, Width, Height,
                           ViewPortWidth, ViewPortHeight: integer;
+                          const ZoomFactor: Byte;
                           SourceBitmap: TBitmap): TBitmap; // refactor this method
   end;
 
@@ -164,7 +165,7 @@ begin
 end;
 
 class function TAnnotatedImage.GetPatch(const X, Y, Width, Height,
-  ViewPortWidth, ViewPortHeight: integer;
+  ViewPortWidth, ViewPortHeight: integer; const ZoomFactor: Byte;
   SourceBitmap: TBitmap): TBitmap;
 var
   PointOnImage: TPoint;
@@ -185,8 +186,8 @@ begin
                                  ViewportWidth, ViewportHeight,
                                  SourceBitmap.Width, SourceBitmap.Height);
 
-  XOffset:= Width div 4;
-  YOffset:= Height div 4;
+  XOffset:= Width div (2 * ZoomFactor);
+  YOffset:= Height div (2 * ZoomFactor);
 
   DestRect:= TRect.Create(TPoint.Zero, TPoint.Create(Width, Height));
   SourceRect:= TRect.Create(TPoint.Create(PointOnImage.X - XOffset,

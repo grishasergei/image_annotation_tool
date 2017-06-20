@@ -87,7 +87,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdActns, System.Actions,
   Vcl.ActnList, Vcl.ExtDlgs, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.WinXCtrls, Vcl.Buttons, Vcl.Grids, Generics.Collections, Annotation.Interfaces, Main.Controller,
-  Annotation.Action, Vcl.ButtonGroup;
+  Annotation.Action, Vcl.ButtonGroup, Vcl.ComCtrls;
 
 type
   TCrowdAnnotationForm = class(TForm, IImageAnnotationView)
@@ -142,6 +142,8 @@ type
     ImageZoomBox: TImage;
     PanelMagnifier: TPanel;
     ImageMagnifier: TImage;
+    TrackBarZoomFactor: TTrackBar;
+    ActionZoomFactorChange: TAction;
     procedure ImageOpenAccept(Sender: TObject);
     procedure ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -163,11 +165,16 @@ type
     procedure ActionLoadAnnotationsAccept(Sender: TObject);
     procedure ImageContainerMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure ImageContainerMouseLeave(Sender: TObject);
+    procedure ActionZoomFactorChangeExecute(Sender: TObject);
+    procedure FormMouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
   private
     { Private declarations }
     FController: TAnnotatedImageController;
     procedure LoadImage(const FileName: TStrings);
+    procedure ToggleMagnifier;
     //procedure ViewportToImage(const X, Y: integer; const AImage: TcxImage; var XNew, YNew: integer);
   public
     { Public declarations }
@@ -249,6 +256,14 @@ begin
   FController.SaveCurrentAnnotations;
 end;
 
+procedure TCrowdAnnotationForm.ActionZoomFactorChangeExecute(Sender: TObject);
+var
+  ZoomFactor: Integer;
+begin
+  ZoomFactor:= TTrackBar(Sender).Position;
+  FController.ZoomFactor:= Byte(ZoomFactor);
+end;
+
 procedure TCrowdAnnotationForm.Clear;
 begin
   ListBoxHistory.Clear;
@@ -281,17 +296,23 @@ begin
   FController.Free;
 end;
 
-procedure TCrowdAnnotationForm.ImageContainerMouseLeave(Sender: TObject);
+procedure TCrowdAnnotationForm.FormMouseWheelDown(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 begin
-  //PanelMagnifier.Visible:= False;
+  TrackBarZoomFactor.Position:= TrackBarZoomFactor.Position - 1;
+end;
+
+procedure TCrowdAnnotationForm.FormMouseWheelUp(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+  TrackBarZoomFactor.Position:= TrackBarZoomFactor.Position + 1;
 end;
 
 procedure TCrowdAnnotationForm.ImageContainerMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  //PanelMagnifier.Top:= Y + 5;
-  //PanelMagnifier.Left:= X + 5;
-  //PanelMagnifier.Visible:= True;
+  PanelMagnifier.Top:= Y + 5;
+  PanelMagnifier.Left:= X + 5;
   FController.ShowZoomPatch(X, Y, ImageZoomBox.Width, ImageZoomBox.Height,
                             ImageContainer.Width, ImageContainer.Height,
                             ImageContainer.Picture.Bitmap);
@@ -300,7 +321,11 @@ end;
 procedure TCrowdAnnotationForm.ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  FController.PutMarkerAt(X, Y, ImageContainer.Width, ImageContainer.Height);
+  case Button of
+    TMouseButton.mbLeft: FController.PutMarkerAt(X, Y, ImageContainer.Width, ImageContainer.Height);
+    TMouseButton.mbRight: ToggleMagnifier;
+    TMouseButton.mbMiddle: Exit;
+  end;
 end;
 
 procedure TCrowdAnnotationForm.ImageOpenAccept(Sender: TObject);
@@ -339,6 +364,9 @@ procedure TCrowdAnnotationForm.RenderZoomBox(const ABitmap: TBitmap);
 begin
   ImageZoomBox.Picture.Bitmap.SetSize(ABitmap.Width, ABitmap.Height);
   ImageZoomBox.Picture.Bitmap.Canvas.Draw(0, 0, ABitmap);
+
+  ImageMagnifier.Picture.Bitmap.SetSize(ABitmap.Width, ABitmap.Height);
+  ImageMagnifier.Picture.Bitmap.Canvas.Draw(0, 0, ABitmap);
 end;
 
 procedure TCrowdAnnotationForm.ShowHistory(
@@ -375,6 +403,11 @@ begin
   LabelCurrentImageFullName.Caption:= ImageInfo.FileName;
   LabelImageWidth.Caption:= IntToStr(ImageInfo.Width);
   LabelImageHeight.Caption:= IntToStr(ImageInfo.Height);
+end;
+
+procedure TCrowdAnnotationForm.ToggleMagnifier;
+begin
+  PanelMagnifier.Visible:= not PanelMagnifier.Visible;
 end;
 
 end.
