@@ -267,14 +267,21 @@ end;
 procedure TAnnotatedImageController.ShowImageAt(const Index: integer);
 var
   ImageInfo: TImageInfo;
+  BitmapToRender: Vcl.Graphics.TBitmap;
 begin
   if (Index >= FAnnotatedImages.Count) or (Index < 0) then
     Exit;
-  // Fix a memory leak. Do like in ShowZoomPatch
+
   case FPresentMode of
-    prmdOriginal: FView.RenderBitmap(FAnnotatedImages[Index].ImageBitmap);
-    prmdCombined: FView.RenderBitmap(FAnnotatedImages[Index].CombinedBitmap);
-    prmdMask: FView.RenderBitmap(FAnnotatedImages[Index].MaskBitmap);
+    prmdOriginal: BitmapToRender:= FAnnotatedImages[Index].ImageBitmap;
+    prmdCombined: BitmapToRender:= FAnnotatedImages[Index].CombinedBitmap;
+    prmdMask:     BitmapToRender:= FAnnotatedImages[Index].MaskBitmap;
+  end;
+
+  try
+    FView.RenderBitmap(BitmapToRender);
+  finally
+    BitmapToRender.Free;
   end;
 
   ImageInfo.FileName:= FAnnotatedImages[Index].Name;
