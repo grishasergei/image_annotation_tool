@@ -10,6 +10,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  Menu = MainMenu
   OldCreateOrder = False
   Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
@@ -30,6 +31,16 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     ShowCaption = False
     TabOrder = 0
     Visible = False
+    object ToolBar1: TToolBar
+      Left = 0
+      Top = 0
+      Width = 966
+      Height = 29
+      Caption = 'ToolBar1'
+      Menu = MainMenu
+      ShowCaptions = True
+      TabOrder = 0
+    end
   end
   object PanelLeft: TPanel
     Left = 0
@@ -627,6 +638,20 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     object ActionZoomFactorChange: TAction
       Caption = 'ActionZoomFactorChange'
       OnExecute = ActionZoomFactorChangeExecute
+    end
+    object ActionShowSettings: TAction
+      Caption = 'Settings'
+      OnExecute = ActionShowSettingsExecute
+    end
+  end
+  object MainMenu: TMainMenu
+    Left = 24
+    Top = 251
+    object Settings1: TMenuItem
+      Caption = 'File'
+      object Settings2: TMenuItem
+        Action = ActionShowSettings
+      end
     end
   end
 end

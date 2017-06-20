@@ -87,7 +87,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdActns, System.Actions,
   Vcl.ActnList, Vcl.ExtDlgs, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.WinXCtrls, Vcl.Buttons, Vcl.Grids, Generics.Collections, Annotation.Interfaces, Main.Controller,
-  Annotation.Action, Vcl.ButtonGroup, Vcl.ComCtrls;
+  Annotation.Action, Vcl.ButtonGroup, Vcl.ComCtrls, Vcl.ToolWin, Vcl.Menus;
 
 type
   TCrowdAnnotationForm = class(TForm, IImageAnnotationView)
@@ -144,6 +144,11 @@ type
     ImageMagnifier: TImage;
     TrackBarZoomFactor: TTrackBar;
     ActionZoomFactorChange: TAction;
+    ToolBar1: TToolBar;
+    MainMenu: TMainMenu;
+    Settings1: TMenuItem;
+    ActionShowSettings: TAction;
+    Settings2: TMenuItem;
     procedure ImageOpenAccept(Sender: TObject);
     procedure ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -170,6 +175,7 @@ type
       MousePos: TPoint; var Handled: Boolean);
     procedure FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
       MousePos: TPoint; var Handled: Boolean);
+    procedure ActionShowSettingsExecute(Sender: TObject); // refactor this!
   private
     { Private declarations }
     FController: TAnnotatedImageController;
@@ -192,7 +198,7 @@ var
 implementation
 
 uses
-  Annotation.Utils, System.UITypes;
+  Annotation.Utils, System.UITypes, Settings, SettingsView, SettingsController;
 
 {$R *.dfm}
 
@@ -254,6 +260,22 @@ end;
 procedure TCrowdAnnotationForm.ActionSaveCurrentAnnotationExecute(Sender: TObject);
 begin
   FController.SaveCurrentAnnotations;
+end;
+
+procedure TCrowdAnnotationForm.ActionShowSettingsExecute(Sender: TObject);
+var
+  SettingsController: TSettingsController;
+  SettingsModel: ISettings;
+  SettingsView: ISettingsView;
+begin
+  SettingsModel:= TSettingsRegistry.Create('Software\ImageAnnotationTool\');
+  SettingsView:= TFormSettings.Create(self);
+  SettingsController:= TSettingsController.Create(SettingsModel, SettingsView);
+  try
+    SettingsController.ShowSettings;
+  finally
+    SettingsController.Free;
+  end;
 end;
 
 procedure TCrowdAnnotationForm.ActionZoomFactorChangeExecute(Sender: TObject);
