@@ -3,7 +3,7 @@ unit Annotation.Action;
 interface
 
 uses
-  SuperObject, Vcl.Graphics, System.Types;
+  SuperObject, Vcl.Graphics, System.Types, Settings;
 
 type
 
@@ -11,7 +11,7 @@ type
     function    ToJSON(): ISuperObject;
     procedure   AddToJSONArray(var JSON: ISuperObject; const ArrayName: string);
     procedure   RenderOnMask(var MaskBitmap: TBitmap);
-    procedure   RenderOnView(var ViewBitmap: TBitmap);
+    procedure   RenderOnView(var ViewBitmap: TBitmap; const Settings: ISettingsReader);
     function    GetJOSNTypeName: string;
     function    HistoryCaption: string;
   end;
@@ -20,7 +20,7 @@ type
     function    ToJSON(): ISuperObject;
     procedure   AddToJSONArray(var JSON: ISuperObject; const ArrayName: string); virtual;
     procedure   RenderOnMask(var MaskBitmap: TBitmap); virtual;
-    procedure   RenderOnView(var ViewBitmap: TBitmap); virtual;
+    procedure   RenderOnView(var ViewBitmap: TBitmap; const Settings: ISettingsReader); virtual;
     function    GetJOSNTypeName: string; virtual;
     function    HistoryCaption: string; virtual;
   end;
@@ -45,7 +45,7 @@ type
     function    ToJSON(): ISuperObject;
     procedure   AddToJSONArray(var JSON: ISuperObject; const ArrayName: string);
     procedure   RenderOnMask(var MaskBitmap: TBitmap);
-    procedure   RenderOnView(var ViewBitmap: TBitmap);
+    procedure   RenderOnView(var ViewBitmap: TBitmap; const Settings: ISettingsReader);
     function    GetJOSNTypeName: string;
     function    HistoryCaption: string;
   end;
@@ -54,7 +54,7 @@ type
   public
     procedure   AddToJSONArray(var JSON: ISuperObject; const ArrayName: string);  override;
     procedure   RenderOnMask(var MaskBitmap: TBitmap); override;
-    procedure   RenderOnView(var ViewBitmap: TBitmap); override;
+    procedure   RenderOnView(var ViewBitmap: TBitmap; const Settings: ISettingsReader); override;
     function    HistoryCaption: string; override;
   end;
 
@@ -103,15 +103,15 @@ begin
   MaskBitmap.Canvas.Pixels[X, Y]:= clWhite;
 end;
 
-procedure TDotMarker.RenderOnView(var ViewBitmap: TBitmap);
+procedure TDotMarker.RenderOnView(var ViewBitmap: TBitmap; const Settings: ISettingsReader);
 var
   PenWidth,
   StrokeLength: integer;
 begin
-  PenWidth:= 2;
-  StrokeLength:= 10;
+  PenWidth:= Settings.GetDotMarkerStrokeWidth;
+  StrokeLength:= Settings.GetDotMarkerStrokeLength;
+  ViewBitmap.Canvas.Pen.Color:= Settings.GetDotMarkerColor;
 
-  ViewBitmap.Canvas.Pen.Color:= clRed;
   ViewBitmap.Canvas.Pen.Width:= PenWidth;
 
   ViewBitmap.Canvas.MoveTo(X, Y - StrokeLength);
@@ -151,7 +151,7 @@ begin
   //
 end;
 
-procedure TEmptyAction.RenderOnView(var ViewBitmap: TBitmap);
+procedure TEmptyAction.RenderOnView(var ViewBitmap: TBitmap; const Settings: ISettingsReader);
 begin
   //
 end;
@@ -187,7 +187,7 @@ begin
   MaskBitmap.Canvas.FillRect(Rect(0, 0, MaskBitmap.Width, MaskBitmap.Height));
 end;
 
-procedure TAnnotationClear.RenderOnView(var ViewBitmap: TBitmap);
+procedure TAnnotationClear.RenderOnView(var ViewBitmap: TBitmap; const Settings: ISettingsReader);
 begin
   ViewBitmap.Canvas.Brush.Color:= clBlack;
   ViewBitmap.Canvas.FillRect(Rect(0, 0, ViewBitmap.Width, ViewBitmap.Height));

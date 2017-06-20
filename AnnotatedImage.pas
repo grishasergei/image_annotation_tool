@@ -51,7 +51,7 @@ type
 implementation
 
 uses
-  Annotation.Utils, SysUtils, Math;
+  Annotation.Utils, SysUtils, Math, Settings;
 
 { TAnnotatedImage }
 
@@ -96,6 +96,7 @@ var
   i: integer;
   AnnotationAction: IAnnotationAction;
   BitmapAnnotationActions: TBitmap;
+  Settings: ISettings;
 begin
   Result:= TBitmap.Create;
   Result.Assign(FBitmapImage);
@@ -112,10 +113,12 @@ begin
     BitmapAnnotationActions.Canvas.Brush.Style:= bsSolid;
     BitmapAnnotationActions.Canvas.FillRect(Rect(0, 0, BitmapAnnotationActions.Width, BitmapAnnotationActions.Height));
 
+    Settings:= TSettingsRegistry.Create('Software\ImageAnnotationTool\');
+
     for i := 0 to FCurrentAnnotationActionIndex do
     begin
       AnnotationAction:= FAnnotationActions[i];
-      AnnotationAction.RenderOnView(BitmapAnnotationActions);
+      AnnotationAction.RenderOnView(BitmapAnnotationActions, Settings);
     end;
 
     Result.Canvas.Draw(0, 0, BitmapAnnotationActions);
@@ -170,7 +173,6 @@ class function TAnnotatedImage.GetPatch(const X, Y, Width, Height,
 var
   PointOnImage: TPoint;
   DestRect, SourceRect: TRect;
-  Top, Bottom: TPoint;
   XOffset, YOffset: integer;
   CenterPoint: TPoint;
 begin
