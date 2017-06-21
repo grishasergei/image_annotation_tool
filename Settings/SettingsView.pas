@@ -29,7 +29,10 @@ type
     LabelDotMarker: TLabel;
     ActionList: TActionList;
     ActionShowSettings: TAction;
+    ImageDotMarker: TImage;
+    ActionDrawDotMarker: TAction;
     procedure ActionShowSettingsExecute(Sender: TObject);
+    procedure ActionDrawDotMarkerExecute(Sender: TObject);
   private
     { Private declarations }
 
@@ -50,6 +53,29 @@ implementation
 {$R *.dfm}
 
 { TFormSettings }
+
+procedure TFormSettings.ActionDrawDotMarkerExecute(Sender: TObject);
+var
+  X, Y: integer;
+  StrokeLength: integer;
+begin
+  ImageDotMarker.Canvas.Pen.Color:= clWhite;
+  ImageDotMarker.Canvas.Rectangle(0, 0, ImageDotMarker.Picture.Bitmap.Width, ImageDotMarker.Picture.Bitmap.Height);
+
+  ImageDotMarker.Canvas.Pen.Color:= EditDotMarkerColor.Selected;
+  ImageDotMarker.Canvas.Pen.Width:= EditDotMarkerStrokeWidth.Value;
+
+  X:= Trunc(ImageDotMarker.Picture.Bitmap.Width / 2);
+  Y:= Trunc(ImageDotMarker.Picture.Bitmap.Height / 2);
+
+  StrokeLength:= EditDotMarkerStrokeLength.Value;
+
+  ImageDotMarker.Canvas.MoveTo(X, Y - StrokeLength);
+  ImageDotMarker.Canvas.LineTo(X, Y + StrokeLength);
+
+  ImageDotMarker.Canvas.MoveTo(X - StrokeLength, Y);
+  ImageDotMarker.Canvas.LineTo(X +  StrokeLength, Y);
+end;
 
 procedure TFormSettings.ActionShowSettingsExecute(Sender: TObject);
 begin

@@ -3,8 +3,8 @@ object FormSettings: TFormSettings
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'Settings'
-  ClientHeight = 134
-  ClientWidth = 273
+  ClientHeight = 133
+  ClientWidth = 373
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,8 +18,8 @@ object FormSettings: TFormSettings
   object PanelDotMarker: TPanel
     Left = 0
     Top = 0
-    Width = 273
-    Height = 134
+    Width = 373
+    Height = 133
     Align = alClient
     Caption = 'PanelDotMarker'
     ShowCaption = False
@@ -62,12 +62,19 @@ object FormSettings: TFormSettings
       Height = 13
       Caption = 'Stroke width'
     end
+    object ImageDotMarker: TImage
+      Left = 272
+      Top = 31
+      Width = 78
+      Height = 78
+    end
     object EditDotMarkerColor: TColorBox
       Left = 104
       Top = 31
       Width = 145
       Height = 22
       TabOrder = 0
+      OnChange = ActionDrawDotMarkerExecute
     end
     object EditDotMarkerStrokeWidth: TSpinEdit
       Left = 104
@@ -78,6 +85,7 @@ object FormSettings: TFormSettings
       MinValue = 1
       TabOrder = 1
       Value = 1
+      OnChange = ActionDrawDotMarkerExecute
     end
     object EditDotMarkerStrokeLength: TSpinEdit
       Left = 104
@@ -88,6 +96,7 @@ object FormSettings: TFormSettings
       MinValue = 1
       TabOrder = 2
       Value = 1
+      OnChange = ActionDrawDotMarkerExecute
     end
   end
   object ActionList: TActionList
@@ -95,6 +104,10 @@ object FormSettings: TFormSettings
     object ActionShowSettings: TAction
       Caption = 'Show Settings'
       OnExecute = ActionShowSettingsExecute
+    end
+    object ActionDrawDotMarker: TAction
+      Caption = 'ActionDrawDotMarker'
+      OnExecute = ActionDrawDotMarkerExecute
     end
   end
 end
