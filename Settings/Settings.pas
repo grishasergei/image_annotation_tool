@@ -84,13 +84,14 @@ begin
 
   FReg.Access:= KEY_READ;
 
-  OpenResult:= Freg.OpenKey(KeyName, true);
+  OpenResult:= Freg.OpenKey(KeyName, False);
 
   if not OpenResult then
     Exit;
 
   try
-    Result:= FReg.ReadInteger(ValueName);
+    if FReg.KeyExists(ValueName) then
+      Result:= FReg.ReadInteger(ValueName);
   finally
     FReg.CloseKey;
   end;
