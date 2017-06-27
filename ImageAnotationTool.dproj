@@ -146,6 +146,13 @@
         <DCCReference Include="Annotation.Action.pas">
             <Form>$R *.res</Form>
         </DCCReference>
+        <DCCReference Include="Settings\Settings.pas"/>
+        <DCCReference Include="Settings\SettingsController.pas"/>
+        <DCCReference Include="Settings\SettingsView.pas">
+            <Form>FormSettings</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="AnnotatedImages.Model.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -175,12 +182,6 @@
                 <DeployFile LocalName="Win64\Debug\output\ImageAnotationTool.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>ImageAnotationTool.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\output\ImageAnotationTool.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>ImageAnotationTool.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

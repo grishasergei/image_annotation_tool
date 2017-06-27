@@ -4,7 +4,7 @@ interface
 
 uses
   AnnotatedImage, Annotation.Interfaces, SysUtils, Classes, Generics.Collections,
-  Vcl.Graphics;
+  Vcl.Graphics, Controls, Vcl.StdActns, Vcl.ExtCtrls, StdCtrls;
 
 type
 
@@ -23,33 +23,45 @@ type
     procedure   SaveImageAnnotation(const AnnotatedImage: TAnnotatedImage);
     procedure   SetPresentMode(const Value: TPresentMode);
     procedure   CloseImageAt(const AIndex: integer);
-    procedure   SetZoomFactor(const Value: Byte);
+    procedure   SetPresentationModeCombined(Sender: TObject);
+    procedure   SetPresentationModeMask(Sender: TObject);
+    procedure   SetPresentationModeOriginal(Sender: TObject);
+    procedure   ViewImageMouseDown(Sender: TObject; Button: TMouseButton;
+                                   Shift: TShiftState; X, Y: Integer);
+    procedure   ShowApplicationSettings(Sender: TObject);
   public
     constructor Create(const AView: IImageAnnotationView);
     destructor  Destroy; override;
     // properties
     property    CurrentImage: TAnnotatedImage read GetCurrentImage;
     property    PresentMode: TPresentMode read FPresentMode write SetPresentMode;
-    property    ZoomFactor: Byte read FZoomFactor write SetZoomFactor;
+    property    ZoomFactor: Byte read FZoomFactor;
     // methods
     procedure   OpenImages(const AFiles: TStrings);
     procedure   PutMarkerAt(const X, Y, ViewportWidth, ViewportHeight: integer);
-    procedure   SaveCurrentAnnotations;
-    procedure   NextImage;
-    procedure   PreviousImage;
-    procedure   SaveAllAnnotations;
-    procedure   ClearMarkersOnCurrentImage;
+    procedure   SaveCurrentAnnotations(Sender: TObject = nil);
+    procedure   NextImage(Sender: TObject = nil);
+    procedure   PreviousImage(Sender: TObject = nil);
+    procedure   SaveAllAnnotations(Sender: TObject = nil);
+    procedure   ClearMarkersOnCurrentImage(Sender: TObject = nil);
     function    HasUnsavedChanges: boolean;
-    procedure   SetAnnotationActionIndex(const AValue: integer);
-    procedure   CloseCurrentImage;
-    procedure   LoadAnnotationsToCurrentImage(const AFileName: TFileName);
+    procedure   SetAnnotationActionIndex(const AValue: integer); overload;
+    procedure   SetAnnotationActionIndex(Sender: TObject); overload;
+    procedure   CloseCurrentImage(Sender: TObject = nil);
+    procedure   LoadAnnotationsToCurrentImage(const AFileName: TFileName); overload;
+    procedure   LoadAnnotationsToCurrentImage(Sender: TObject); overload;
     procedure   ShowZoomPatch(const X, Y, Width, Height, ViewPortWidth, ViewPortHeight: integer; SourceBitmap: TBitmap);
+    procedure   SetZoomFactor(const Value: Byte); overload;
+    procedure   SetZoomFactor(Sender: TObject); overload;
+    procedure   ViewCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure   ViewImageMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
   end;
 
 implementation
 
 uses
-  superobject, JPeg, math, IOUtils, Windows;
+  superobject, JPeg, math, IOUtils, Windows, Dialogs, System.UITypes,
+  Settings, SettingsView, SettingsController;
 
 { TAnnotatedImageController }
 
@@ -66,7 +78,7 @@ begin
   end;
 end;
 
-procedure TAnnotatedImageController.ClearMarkersOnCurrentImage;
+procedure TAnnotatedImageController.ClearMarkersOnCurrentImage(Sender: TObject = nil);
 begin
   if not Assigned(CurrentImage) then
     Exit;
@@ -75,9 +87,16 @@ begin
   ShowCurrentImage;
 end;
 
-procedure TAnnotatedImageController.CloseCurrentImage;
+procedure TAnnotatedImageController.CloseCurrentImage(Sender: TObject = nil);
 begin
-  CloseImageAt(FCurrentIndex);
+  if Assigned(CurrentImage) and (FCurrentIndex > -1) then
+    if CurrentImage.IsChanged then
+    begin
+      if MessageDlg('There are some unsaved changes. Do you really want to close this image?',
+                    mtConfirmation, mbYesNo, 0) = mrYes then
+        CloseImageAt(FCurrentIndex);
+    end else
+      CloseImageAt(FCurrentIndex);
 end;
 
 procedure TAnnotatedImageController.CloseImageAt(const AIndex: integer);
@@ -96,6 +115,24 @@ begin
   FCurrentIndex:= -1;
   FPresentMode:= prmdCombined;
   FZoomFactor:= 2;
+
+  FView.SetActionSaveAllAnnotationsExecute(SaveAllAnnotations);
+  FView.SetActionClearMarkersExecute(ClearMarkersOnCurrentImage);
+  FView.SetActionCloseCurrentImageExecute(CloseCurrentImage);
+  FView.SetActionLoadAnnotationsAccept(LoadAnnotationsToCurrentImage);
+  FView.SetActionNextImageExecute(NextImage);
+  FView.SetActionPresentationModeCombinedExecute(SetPresentationModeCombined);
+  FView.SetActionPresentationModeMaskExecute(SetPresentationModeMask);
+  FView.SetActionPresentationModeOriginalExecute(SetPresentationModeOriginal);
+  FView.SetActionPreviousImageExecute(PreviousImage);
+  FView.SetActionSaveCurrentAnnotationExecute(SaveCurrentAnnotations);
+  FView.SetActionZoomFactorChangeExecute(SetZoomFactor);
+  FView.SetFormCloseQuery(ViewCloseQuery);
+  FView.SetImageContainerMouseMoveEvent(ViewImageMouseMove);
+  FView.SetImageCOntainerMouseDownEvent(ViewImageMouseDown);
+  FView.SetHistoryBoxOnclickEvent(SetAnnotationActionIndex);
+  FView.SetLoadImageMethod(OpenImages);
+  FView.SetShowSettingsExecute(ShowApplicationSettings);
 end;
 
 destructor TAnnotatedImageController.Destroy;
@@ -125,6 +162,12 @@ begin
 end;
 
 procedure TAnnotatedImageController.LoadAnnotationsToCurrentImage(
+  Sender: TObject);
+begin
+  LoadAnnotationsToCurrentImage((Sender as TFileOpen).Dialog.FileName);
+end;
+
+procedure TAnnotatedImageController.LoadAnnotationsToCurrentImage(
   const AFileName: TFileName);
 var
   AnnotationsJSON: ISuperObject;
@@ -137,7 +180,7 @@ begin
   ShowCurrentImage;
 end;
 
-procedure TAnnotatedImageController.NextImage;
+procedure TAnnotatedImageController.NextImage(Sender: TObject = nil);
 begin
   SetCurrentImageIndex(FCurrentIndex + 1);
 end;
@@ -153,7 +196,7 @@ begin
   ShowCurrentImage;
 end;
 
-procedure TAnnotatedImageController.PreviousImage;
+procedure TAnnotatedImageController.PreviousImage(Sender: TObject = nil);
 begin
   SetCurrentImageIndex(FCurrentIndex - 1);
 end;
@@ -167,7 +210,7 @@ begin
   ShowCurrentImage;
 end;
 
-procedure TAnnotatedImageController.SaveAllAnnotations;
+procedure TAnnotatedImageController.SaveAllAnnotations(Sender: TObject = nil);
 var
   AnnotatedImage: TAnnotatedImage;
 begin
@@ -175,7 +218,7 @@ begin
     SaveImageAnnotation(AnnotatedImage);
 end;
 
-procedure TAnnotatedImageController.SaveCurrentAnnotations;
+procedure TAnnotatedImageController.SaveCurrentAnnotations(Sender: TObject = nil);
 begin
   SaveImageAnnotation(CurrentImage);
 end;
@@ -224,6 +267,11 @@ begin
   ShowCurrentImage;
 end;
 
+procedure TAnnotatedImageController.SetAnnotationActionIndex(Sender: TObject);
+begin
+  SetAnnotationActionIndex(TListBox(Sender).ItemIndex);
+end;
+
 procedure TAnnotatedImageController.SetCurrentImageIndex(const Value: integer);
 begin
   if FAnnotatedImages.Count = 0 then
@@ -243,6 +291,23 @@ begin
   ShowCurrentImage;
 end;
 
+procedure TAnnotatedImageController.SetPresentationModeCombined(
+  Sender: TObject);
+begin
+  PresentMode:= prmdCombined;
+end;
+
+procedure TAnnotatedImageController.SetPresentationModeMask(Sender: TObject);
+begin
+  PresentMode:= prmdMask;
+end;
+
+procedure TAnnotatedImageController.SetPresentationModeOriginal(
+  Sender: TObject);
+begin
+  PresentMode:= prmdOriginal;
+end;
+
 procedure TAnnotatedImageController.SetPresentMode(const Value: TPresentMode);
 begin
   if Value <> FPresentMode then
@@ -253,10 +318,34 @@ begin
     FPresentMode := Value;
 end;
 
+procedure TAnnotatedImageController.SetZoomFactor(Sender: TObject);
+begin
+  SetZoomFactor(FView.GetZoomFactor);
+end;
+
 procedure TAnnotatedImageController.SetZoomFactor(const Value: Byte);
 begin
   if (Value >= 1) and (Value <= 10) then
     FZoomFactor := Value;
+end;
+
+procedure TAnnotatedImageController.ShowApplicationSettings(Sender: TObject);
+var
+  SettingsController: TSettingsController;
+  SettingsModel: ISettings;
+  SettingsView: TFormSettings;
+begin
+  SettingsModel:= TSettingsRegistry.Create('Software\ImageAnnotationTool\');
+  SettingsView:= TFormSettings.Create(nil);
+  SettingsController:= TSettingsController.Create(SettingsModel, SettingsView);
+  try
+    SettingsController.ShowSettings;
+  finally
+    SettingsController.Free;
+    SettingsView.Free;
+  end;
+
+  ShowCurrentImage;
 end;
 
 procedure TAnnotatedImageController.ShowCurrentImage;
@@ -311,6 +400,36 @@ begin
       Bitmap.Free;
     end;
   end;
+end;
+
+procedure TAnnotatedImageController.ViewCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+  CanClose:= True;
+
+  if HasUnsavedChanges then
+    if MessageDlg('There are some unsaved changes. Do you really want to close?',
+                  mtConfirmation, mbYesNo, 0) = mrNo then
+      CanClose:= False;
+end;
+
+procedure TAnnotatedImageController.ViewImageMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  case Button of
+    TMouseButton.mbLeft: PutMarkerAt(X, Y, TImage(Sender).Width, TImage(Sender).Height);
+    TMouseButton.mbRight: FView.ToggleMagnifier;
+    TMouseButton.mbMiddle: Exit;
+  end;
+end;
+
+procedure TAnnotatedImageController.ViewImageMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: integer);
+begin
+  FView.SetMagnifierTopLeft(Y + 5, X + 5);
+  ShowZoomPatch(X, Y, FView.GetZoomBoxWidth, FView.GetZoomBoxHeight,
+                TImage(Sender).Width, TImage(Sender).Height,
+                TImage(Sender).Picture.Bitmap);
 end;
 
 end.

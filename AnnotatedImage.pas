@@ -21,12 +21,13 @@ type
     function    GetMaskBitmap: TBitmap;
     function    GetAnnotationActionsJSON: ISuperObject;
     procedure   PushAnnotationAction(const AnnotationAction: IAnnotationAction);
+    function GetBitmapImage: TBitmap;
   public
     constructor Create(const ImageBitmap: TBitmap; const Name: string); overload;
     constructor Create(const ImageGraphic: TGraphic; const Name: string); overload;
     destructor  Destroy; override;
     // properties
-    property    ImageBitmap: TBitmap read FBitmapImage;
+    property    ImageBitmap: TBitmap read GetBitmapImage;
     property    CombinedBitmap: TBitmap read GetCombinedBitmap;
     property    MaskBitmap: TBitmap read GetMaskBitmap;
     property    AnnotationActions: TList<IAnnotationAction> read FAnnotationActions;
@@ -146,6 +147,12 @@ begin
     AnnotationAction.AddToJSONArray(Result, 'annotations');
     //Result.A['annotations'].Add(AnnotationAction.ToJSON);
   end;
+end;
+
+function TAnnotatedImage.GetBitmapImage: TBitmap;
+begin
+  Result:= TBitmap.Create;
+  Result.Assign(FBitmapImage);
 end;
 
 function TAnnotatedImage.GetMaskBitmap: TBitmap;

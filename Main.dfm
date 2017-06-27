@@ -13,9 +13,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
   Menu = MainMenu
   OldCreateOrder = False
   Position = poScreenCenter
-  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   OnMouseWheelDown = FormMouseWheelDown
   OnMouseWheelUp = FormMouseWheelUp
   PixelsPerInch = 96
@@ -36,6 +34,7 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Top = 0
       Width = 966
       Height = 29
+      ButtonHeight = 21
       Caption = 'ToolBar1'
       Menu = MainMenu
       ShowCaptions = True
@@ -291,11 +290,9 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
           Height = 19
           Margins.Left = 1
           Margins.Right = 1
+          Action = ActionPresentationModeCombined
           Align = alLeft
-          GroupIndex = 2
           Down = True
-          Caption = 'Combined'
-          OnClick = ActionPresentationModeCombinedExecute
         end
         object ButtonMaskMode: TSpeedButton
           AlignWithMargins = True
@@ -305,10 +302,8 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
           Height = 19
           Margins.Left = 1
           Margins.Right = 1
+          Action = ActionPresentationModeMask
           Align = alLeft
-          GroupIndex = 2
-          Caption = 'Mask'
-          OnClick = ActionPresentationModeMaskExecute
         end
         object ButtonOriginalMode: TSpeedButton
           AlignWithMargins = True
@@ -318,11 +313,8 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
           Height = 19
           Margins.Left = 1
           Margins.Right = 1
+          Action = ActionPresentationModeOriginal
           Align = alLeft
-          GroupIndex = 2
-          Caption = 'Original'
-          Visible = False
-          OnClick = ActionPresentationModeOriginalExecute
         end
       end
       object ButtonCloseCurrentImage: TButton
@@ -357,8 +349,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         Align = alClient
         Center = True
         Proportional = True
-        OnMouseDown = ImageContainer_MouseDown
-        OnMouseMove = ImageContainerMouseMove
         ExplicitLeft = 400
         ExplicitTop = 160
         ExplicitWidth = 105
@@ -520,7 +510,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       BevelOuter = bvNone
       Color = clBtnFace
       TabOrder = 1
-      OnClick = ListBoxHistoryClick
       OnDrawItem = ListBoxHistoryDrawItem
     end
     object PanelZoomBox: TPanel
@@ -558,7 +547,6 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
         ShowHint = False
         TabOrder = 0
         TickStyle = tsNone
-        OnChange = ActionZoomFactorChangeExecute
       end
     end
   end
@@ -592,39 +580,30 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
     object ActionSaveCurrentAnnotation: TAction
       Caption = 'Save'
       ShortCut = 16467
-      OnExecute = ActionSaveCurrentAnnotationExecute
     end
     object ActionPreviousImage: TAction
       Caption = '<--'
-      OnExecute = ActionPreviousImageExecute
     end
     object ActionNextImage: TAction
       Caption = '-->'
-      OnExecute = ActionNextImageExecute
     end
     object ActionSaveAllAnnotations: TAction
       Caption = 'Save all'
-      OnExecute = ActionSaveAllAnnotationsExecute
     end
     object ActionClearMarkers: TAction
       Caption = 'Clear markers'
-      OnExecute = ActionClearMarkersExecute
     end
     object ActionPresentationModeCombined: TAction
       Caption = 'Combined'
-      OnExecute = ActionPresentationModeCombinedExecute
     end
     object ActionPresentationModeOriginal: TAction
       Caption = 'Original'
-      OnExecute = ActionPresentationModeOriginalExecute
     end
     object ActionPresentationModeMask: TAction
       Caption = 'Mask'
-      OnExecute = ActionPresentationModeMaskExecute
     end
     object ActionCloseCurrentImage: TAction
       Caption = 'Close'
-      OnExecute = ActionCloseCurrentImageExecute
     end
     object ActionLoadAnnotations: TFileOpen
       Category = 'File'
@@ -633,15 +612,12 @@ object CrowdAnnotationForm: TCrowdAnnotationForm
       Hint = 'Open|Opens an existing file'
       ImageIndex = 7
       ShortCut = 16463
-      OnAccept = ActionLoadAnnotationsAccept
     end
     object ActionZoomFactorChange: TAction
       Caption = 'ActionZoomFactorChange'
-      OnExecute = ActionZoomFactorChangeExecute
     end
     object ActionShowSettings: TAction
       Caption = 'Settings'
-      OnExecute = ActionShowSettingsExecute
     end
   end
   object MainMenu: TMainMenu

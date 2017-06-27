@@ -86,7 +86,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdActns, System.Actions,
   Vcl.ActnList, Vcl.ExtDlgs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.WinXCtrls, Vcl.Buttons, Vcl.Grids, Generics.Collections, Annotation.Interfaces, Main.Controller,
+  Vcl.WinXCtrls, Vcl.Buttons, Vcl.Grids, Generics.Collections, Annotation.Interfaces,
   Annotation.Action, Vcl.ButtonGroup, Vcl.ComCtrls, Vcl.ToolWin, Vcl.Menus;
 
 type
@@ -149,38 +149,17 @@ type
     Settings1: TMenuItem;
     ActionShowSettings: TAction;
     Settings2: TMenuItem;
-    procedure ImageOpenAccept(Sender: TObject);
-    procedure ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure ActionSaveCurrentAnnotationExecute(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure ActionPreviousImageExecute(Sender: TObject);
-    procedure ActionNextImageExecute(Sender: TObject);
-    procedure ActionSaveAllAnnotationsExecute(Sender: TObject);
-    procedure ActionClearMarkersExecute(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure ListBoxHistoryClick(Sender: TObject);
     procedure ListBoxHistoryDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
-    procedure ActionPresentationModeCombinedExecute(Sender: TObject);
-    procedure ActionPresentationModeOriginalExecute(Sender: TObject);
-    procedure ActionPresentationModeMaskExecute(Sender: TObject);
-    procedure ActionCloseCurrentImageExecute(Sender: TObject);
-    procedure ActionLoadAnnotationsAccept(Sender: TObject);
-    procedure ImageContainerMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
-    procedure ActionZoomFactorChangeExecute(Sender: TObject);
     procedure FormMouseWheelDown(Sender: TObject; Shift: TShiftState;
       MousePos: TPoint; var Handled: Boolean);
     procedure FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
       MousePos: TPoint; var Handled: Boolean);
-    procedure ActionShowSettingsExecute(Sender: TObject); // refactor this!
+    procedure ImageOpenAccept(Sender: TObject);
+    procedure FormCreate(Sender: TObject); // refactor this!
   private
     { Private declarations }
-    FController: TAnnotatedImageController;
-    procedure LoadImage(const FileName: TStrings);
-    procedure ToggleMagnifier;
+    LoadImage: TLoadImageMethod;
     //procedure ViewportToImage(const X, Y: integer; const AImage: TcxImage; var XNew, YNew: integer);
   public
     { Public declarations }
@@ -190,6 +169,30 @@ type
     procedure ShowImageCount(const ACurrentIndex, ACount: integer);
     procedure ShowHistory(const AnnotationActions: TList<IAnnotationAction>; const ACurrentActionIndex: integer);
     procedure Clear;
+    function  GetZoomFactor: integer;
+    procedure SetMagnifierTopLeft(const Top, Left: integer);
+    function  GetZoomBoxWidth: integer;
+    function  GetZoomBoxHeight: integer;
+    procedure ToggleMagnifier;
+
+    // View actions
+    procedure SetActionSaveAllAnnotationsExecute(Event: TNotifyEvent);
+    procedure SetActionClearMarkersExecute(Event: TNotifyEvent);
+    procedure SetActionCloseCurrentImageExecute(Event: TNotifyEvent);
+    procedure SetActionLoadAnnotationsAccept(Event: TNotifyEvent);
+    procedure SetActionNextImageExecute(Event: TNotifyEvent);
+    procedure SetActionPresentationModeCombinedExecute(Event: TNotifyEvent);
+    procedure SetActionPresentationModeMaskExecute(Event: TNotifyEvent);
+    procedure SetActionPresentationModeOriginalExecute(Event: TNotifyEvent);
+    procedure SetActionPreviousImageExecute(Event: TNotifyEvent);
+    procedure SetActionSaveCurrentAnnotationExecute(Event: TNotifyEvent);
+    procedure SetActionZoomFactorChangeExecute(Event: TNotifyEvent);
+    procedure SetFormCloseQuery(Event: TCloseQueryEvent);
+    procedure SetImageContainerMouseMoveEvent(Event: TMouseMoveEvent);
+    procedure SetImageCOntainerMouseDownEvent(Event: TMouseEvent);
+    procedure SetHistoryBoxOnclickEvent(Event: TNotifyEvent);
+    procedure SetLoadImageMethod(Method: TLoadImageMethod);
+    procedure SetShowSettingsExecute(Event: TNotifyEvent);
   end;
 
 var
@@ -198,93 +201,9 @@ var
 implementation
 
 uses
-  Annotation.Utils, System.UITypes, Settings, SettingsView, SettingsController;
+  Annotation.Utils, System.UITypes;
 
 {$R *.dfm}
-
-procedure TCrowdAnnotationForm.ActionSaveAllAnnotationsExecute(Sender: TObject);
-begin
-  FController.SaveAllAnnotations;
-end;
-
-procedure TCrowdAnnotationForm.ActionClearMarkersExecute(Sender: TObject);
-begin
-  FController.ClearMarkersOnCurrentImage;
-end;
-
-procedure TCrowdAnnotationForm.ActionCloseCurrentImageExecute(Sender: TObject);
-begin
-  if Assigned(FController.CurrentImage) then
-    if FController.CurrentImage.IsChanged then
-    begin
-      if MessageDlg('There are some unsaved changes. Do you really want to close this image?',
-                    mtConfirmation, mbYesNo, 0) = mrYes then
-        FController.CloseCurrentImage;
-    end else
-      FController.CloseCurrentImage;
-end;
-
-procedure TCrowdAnnotationForm.ActionLoadAnnotationsAccept(Sender: TObject);
-begin
-  FController.LoadAnnotationsToCurrentImage((Sender as TFileOpen).Dialog.FileName);
-end;
-
-procedure TCrowdAnnotationForm.ActionNextImageExecute(Sender: TObject);
-begin
-   FController.NextImage;
-end;
-
-procedure TCrowdAnnotationForm.ActionPresentationModeCombinedExecute(
-  Sender: TObject);
-begin
-  FController.PresentMode:= prmdCombined;
-end;
-
-procedure TCrowdAnnotationForm.ActionPresentationModeMaskExecute(
-  Sender: TObject);
-begin
-  FController.PresentMode:= prmdMask;
-end;
-
-procedure TCrowdAnnotationForm.ActionPresentationModeOriginalExecute(
-  Sender: TObject);
-begin
-  FController.PresentMode:= prmdOriginal;
-end;
-
-procedure TCrowdAnnotationForm.ActionPreviousImageExecute(Sender: TObject);
-begin
-  FController.PreviousImage;
-end;
-
-procedure TCrowdAnnotationForm.ActionSaveCurrentAnnotationExecute(Sender: TObject);
-begin
-  FController.SaveCurrentAnnotations;
-end;
-
-procedure TCrowdAnnotationForm.ActionShowSettingsExecute(Sender: TObject);
-var
-  SettingsController: TSettingsController;
-  SettingsModel: ISettings;
-  SettingsView: ISettingsView;
-begin
-  SettingsModel:= TSettingsRegistry.Create('Software\ImageAnnotationTool\');
-  SettingsView:= TFormSettings.Create(self);
-  SettingsController:= TSettingsController.Create(SettingsModel, SettingsView);
-  try
-    SettingsController.ShowSettings;
-  finally
-    SettingsController.Free;
-  end;
-end;
-
-procedure TCrowdAnnotationForm.ActionZoomFactorChangeExecute(Sender: TObject);
-var
-  ZoomFactor: Integer;
-begin
-  ZoomFactor:= TTrackBar(Sender).Position;
-  FController.ZoomFactor:= Byte(ZoomFactor);
-end;
 
 procedure TCrowdAnnotationForm.Clear;
 begin
@@ -298,24 +217,10 @@ begin
   PanelImageContainer.ShowCaption:= true;
 end;
 
-procedure TCrowdAnnotationForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
-  CanClose:= True;
-
-  if FController.HasUnsavedChanges then
-    if MessageDlg('There are some unsaved changes. Do you really want to close?',
-                  mtConfirmation, mbYesNo, 0) = mrNo then
-      CanClose:= False;
-end;
-
 procedure TCrowdAnnotationForm.FormCreate(Sender: TObject);
 begin
-  FController:= TAnnotatedImageController.Create(Self);
-end;
-
-procedure TCrowdAnnotationForm.FormDestroy(Sender: TObject);
-begin
-  FController.Free;
+  PanelMagnifier.Top:= Top;
+  PanelMagnifier.Left:= Left;
 end;
 
 procedure TCrowdAnnotationForm.FormMouseWheelDown(Sender: TObject;
@@ -330,34 +235,24 @@ begin
   TrackBarZoomFactor.Position:= TrackBarZoomFactor.Position + 1;
 end;
 
-procedure TCrowdAnnotationForm.ImageContainerMouseMove(Sender: TObject;
-  Shift: TShiftState; X, Y: Integer);
+function TCrowdAnnotationForm.GetZoomBoxHeight: integer;
 begin
-  PanelMagnifier.Top:= Y + 5;
-  PanelMagnifier.Left:= X + 5;
-  FController.ShowZoomPatch(X, Y, ImageZoomBox.Width, ImageZoomBox.Height,
-                            ImageContainer.Width, ImageContainer.Height,
-                            ImageContainer.Picture.Bitmap);
+  Result:= ImageZoomBox.Height;
 end;
 
-procedure TCrowdAnnotationForm.ImageContainer_MouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+function TCrowdAnnotationForm.GetZoomBoxWidth: integer;
 begin
-  case Button of
-    TMouseButton.mbLeft: FController.PutMarkerAt(X, Y, ImageContainer.Width, ImageContainer.Height);
-    TMouseButton.mbRight: ToggleMagnifier;
-    TMouseButton.mbMiddle: Exit;
-  end;
+  Result:= ImageZoomBox.Width;
+end;
+
+function TCrowdAnnotationForm.GetZoomFactor: integer;
+begin
+  Result:= Byte(TrackBarZoomFactor.Position);
 end;
 
 procedure TCrowdAnnotationForm.ImageOpenAccept(Sender: TObject);
 begin
   LoadImage((Sender as TFileOpen).Dialog.Files);
-end;
-
-procedure TCrowdAnnotationForm.ListBoxHistoryClick(Sender: TObject);
-begin
-  FController.SetAnnotationActionIndex(ListBoxHistory.ItemIndex);
 end;
 
 procedure TCrowdAnnotationForm.ListBoxHistoryDrawItem(Control: TWinControl;
@@ -369,11 +264,6 @@ begin
     Canvas.Font.Color := TColor(Items.Objects[Index]);
     Canvas.TextOut(Rect.Left + 2, Rect.Top, Items[Index]);
   end;
-end;
-
-procedure TCrowdAnnotationForm.LoadImage(const FileName: TStrings);
-begin
-  FController.OpenImages(FileName);
 end;
 
 procedure TCrowdAnnotationForm.RenderBitmap(const ABitmap: TBitmap);
@@ -389,6 +279,110 @@ begin
 
   ImageMagnifier.Picture.Bitmap.SetSize(ABitmap.Width, ABitmap.Height);
   ImageMagnifier.Picture.Bitmap.Canvas.Draw(0, 0, ABitmap);
+end;
+
+procedure TCrowdAnnotationForm.SetActionClearMarkersExecute(
+  Event: TNotifyEvent);
+begin
+  ActionClearMarkers.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionCloseCurrentImageExecute(
+  Event: TNotifyEvent);
+begin
+  ActionCloseCurrentImage.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionLoadAnnotationsAccept(
+  Event: TNotifyEvent);
+begin
+  ActionLoadAnnotations.OnAccept:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionNextImageExecute(Event: TNotifyEvent);
+begin
+  ActionNextImage.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionPresentationModeCombinedExecute(
+  Event: TNotifyEvent);
+begin
+  ActionPresentationModeCombined.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionPresentationModeMaskExecute(
+  Event: TNotifyEvent);
+begin
+  ActionPresentationModeMask.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionPresentationModeOriginalExecute(
+  Event: TNotifyEvent);
+begin
+  ActionPresentationModeOriginal.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionPreviousImageExecute(
+  Event: TNotifyEvent);
+begin
+  ActionPreviousImage.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionSaveAllAnnotationsExecute(
+  Event: TNotifyEvent);
+begin
+  ActionSaveAllAnnotations.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionSaveCurrentAnnotationExecute(
+  Event: TNotifyEvent);
+begin
+  ActionSaveCurrentAnnotation.OnExecute:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetActionZoomFactorChangeExecute(
+  Event: TNotifyEvent);
+begin
+  ActionZoomFactorChange.OnExecute:= Event;
+  TrackBarZoomFactor.OnChange:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetFormCloseQuery(Event: TCloseQueryEvent);
+begin
+  Self.OnCLoseQuery:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetHistoryBoxOnclickEvent(Event: TNotifyEvent);
+begin
+  ListBoxHistory.OnClick:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetImageCOntainerMouseDownEvent(
+  Event: TMouseEvent);
+begin
+  ImageContainer.OnMouseDown:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetImageContainerMouseMoveEvent(
+  Event: TMouseMoveEvent);
+begin
+  ImageCOntainer.OnMouseMove:= Event;
+end;
+
+procedure TCrowdAnnotationForm.SetLoadImageMethod(Method: TLoadImageMethod);
+begin
+  LoadImage:= Method;
+end;
+
+procedure TCrowdAnnotationForm.SetMagnifierTopLeft(const Top, Left: integer);
+begin
+  PanelMagnifier.Top:= Top;
+  PanelMagnifier.Left:= Left;
+end;
+
+procedure TCrowdAnnotationForm.SetShowSettingsExecute(Event: TNotifyEvent);
+begin
+  ActionShowSettings.OnExecute:= Event;
 end;
 
 procedure TCrowdAnnotationForm.ShowHistory(
