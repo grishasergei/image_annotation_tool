@@ -44,6 +44,9 @@ begin
     FModel.SetDotMarkerColor(FView.GetDotMarkerColor);
     FModel.SetDotMarkerStrokeWidth(FView.GetDotMarkerStrokeWidth);
     FModel.SetDotMarkerStrokeLength(FView.GetDotMarkerStrokeLength);
+    FModel.SetSavepathRelativeTo(TSavepathRelativeTo(FView.GetSavePathRelativeTo));
+    FModel.SetSavePathForMarkers(FView.GetSavePathMarkers);
+    FModel.SetSavePathForMasks(FView.GetSavePathMasks);
   except
     CanClose:= false;
   end;

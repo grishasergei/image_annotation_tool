@@ -3,39 +3,59 @@ unit Settings;
 interface
 
 uses
-  Vcl.Graphics, System.Win.Registry;
+  Vcl.Graphics, System.Win.Registry, Generics.Defaults;
 
 type
+
+  TSavepathRelativeTo = (sprApplication, sprImage);
+
   ISettingsReader = interface
     function GetDotMarkerColor(const Deafult: TColor = clRed): TColor;
     function GetDotMarkerStrokeWidth(const Default: integer = 2): integer;
     function GetDotMarkerStrokeLength(const Deafult: integer = 10): integer;
+    function GetSavepathRelativeTo(const Default: TSavepathRelativeTo = sprApplication): TSavepathRelativeTo;
+    function GetSavePathForMarkers(const Default: string = 'markers\'): string;
+    function GetSavePathForMasks(const Default: string = 'masks\'): string;
   end;
 
   ISettings = interface(ISettingsReader)
     procedure SetDotMarkerColor(const Value: TColor);
     procedure SetDotMarkerStrokeWidth(const Value: integer);
     procedure SetDotMarkerStrokeLength(const Value: integer);
+    procedure SetSavepathRelativeTo(const Value: TSavepathRelativeTo);
+    procedure SetSavePathForMarkers(const Value: string);
+    procedure SetSavePathForMasks(const Value: string);
   end;
+
+  TRegistryReadMethod<T> = function(const Name: string): T of object;
+  TRegistryWriteMethod<T> = procedure(const Name: string; Value: T) of object;
 
   TSettingsRegistry = class(TInterfacedObject, ISettings)
   private
     FReg: TRegistry;
     FApplicationKey: string;
-    function  ReadKeyValue(const KeyName: string; const ValueName: string; const Default: integer): integer;
-    procedure WriteKeyValue(const KeyName: string; const ValueName: string; const Value: integer);
+    function  ReadKeyValue<T>(const KeyName: string; const ValueName: string; const Default: T; ReadMethod: TRegistryReadMethod<T>): T;
+    procedure WriteKeyValue<T>(const KeyName: string; const ValueName: string; const Value: T; WriteMethod: TRegistryWriteMethod<T>);
     //
+    procedure WriteStringToReg(const Name: string; Value: string);
   public
     constructor Create(const ApplicationKey: string);
     destructor  Destroy; override;
-    //
+    // Getters
     function GetDotMarkerColor(const Default: TColor): TColor;
     function GetDotMarkerStrokeWidth(const Default: integer): integer;
     function GetDotMarkerStrokeLength(const Default: integer): integer;
-    //
+    function GetSavepathRelativeTo(const Default: TSavepathRelativeTo = sprApplication): TSavepathRelativeTo;
+    function GetSavePathForMarkers(const Default: string = 'markers\'): string;
+    function GetSavePathForMasks(const Default: string = 'masks\'): string;
+
+    // Setters
     procedure SetDotMarkerColor(const Value: TColor);
     procedure SetDotMarkerStrokeWidth(const Value: integer);
     procedure SetDotMarkerStrokeLength(const Value: integer);
+    procedure SetSavepathRelativeTo(const Value: TSavepathRelativeTo);
+    procedure SetSavePathForMarkers(const Value: string);
+    procedure SetSavePathForMasks(const Value: string);
   end;
 
 implementation
@@ -61,22 +81,57 @@ end;
 
 function TSettingsRegistry.GetDotMarkerColor(const Default: TColor): TColor;
 begin
-  Result:= ReadKeyValue(FApplicationKey + 'DotMarker\', 'Color', Default);
+  Result:= ReadKeyValue<integer>(FApplicationKey + 'DotMarker\',
+                                 'Color',
+                                 Default,
+                                 FReg.ReadInteger);
 end;
 
 function TSettingsRegistry.GetDotMarkerStrokeLength(const Default: integer): integer;
 begin
-  Result:= ReadKeyValue(FApplicationKey + 'DotMarker\', 'StrokeLength', Default);
+  Result:= ReadKeyValue<integer>(FApplicationKey + 'DotMarker\',
+                                 'StrokeLength',
+                                 Default,
+                                 FReg.ReadInteger);
 end;
 
 function TSettingsRegistry.GetDotMarkerStrokeWidth(const Default: integer): integer;
 begin
-  Result:= ReadKeyValue(FApplicationKey + 'DotMarker\', 'StrokeWidth', Default);
+  Result:= ReadKeyValue<integer>(FApplicationKey + 'DotMarker\',
+                                 'StrokeWidth',
+                                 Default,
+                                 FReg.ReadInteger);
 end;
 
-function TSettingsRegistry.ReadKeyValue(const KeyName: string;
+function TSettingsRegistry.GetSavePathForMarkers(const Default: string): string;
+begin
+  Result:= ReadKeyValue<string>(FApplicationKey + 'SavePaths\',
+                                'Markers',
+                                Default,
+                                FReg.ReadString);
+end;
+
+function TSettingsRegistry.GetSavePathForMasks(const Default: string): string;
+begin
+  Result:= ReadKeyValue<string>(FApplicationKey + 'SavePaths\',
+                                'Masks',
+                                Default,
+                                FReg.ReadString);
+end;
+
+function TSettingsRegistry.GetSavepathRelativeTo(
+  const Default: TSavepathRelativeTo): TSavepathRelativeTo;
+begin
+  Result:= TSavepathRelativeTo(ReadKeyValue<integer>(FApplicationKey + 'SavePaths\',
+                                                     'RelativeTo',
+                                                     integer(Default),
+                                                     FReg.ReadInteger));
+end;
+
+function TSettingsRegistry.ReadKeyValue<T>(const KeyName: string;
   const ValueName: string;
-  const Default: integer): integer;
+  const Default: T;
+  ReadMethod: TRegistryReadMethod<T>): T;
 var
   OpenResult: boolean;
 begin
@@ -90,7 +145,7 @@ begin
     Exit;
 
   try
-    Result:= FReg.ReadInteger(ValueName);
+    Result:= ReadMethod(ValueName);
   finally
     FReg.CloseKey;
   end;
@@ -98,21 +153,38 @@ end;
 
 procedure TSettingsRegistry.SetDotMarkerStrokeLength(const Value: integer);
 begin
-  WriteKeyValue(FApplicationKey + 'DotMarker\', 'StrokeLength', Value);
+  WriteKeyValue<integer>(FApplicationKey + 'DotMarker\', 'StrokeLength', Value, FReg.WriteInteger);
 end;
 
 procedure TSettingsRegistry.SetDotMarkerColor(const Value: TColor);
 begin
-  WriteKeyValue(FApplicationKey + 'DotMarker\', 'Color', Value);
+  WriteKeyValue<integer>(FApplicationKey + 'DotMarker\', 'Color', Value, FReg.WriteInteger);
 end;
 
 procedure TSettingsRegistry.SetDotMarkerStrokeWidth(const Value: integer);
 begin
-  WriteKeyValue(FApplicationKey + 'DotMarker\', 'StrokeWidth', Value);
+  WriteKeyValue<integer>(FApplicationKey + 'DotMarker\', 'StrokeWidth', Value, FReg.WriteInteger);
 end;
 
-procedure TSettingsRegistry.WriteKeyValue(const KeyName, ValueName: string;
-  const Value: integer);
+procedure TSettingsRegistry.SetSavePathForMarkers(const Value: string);
+begin
+  WriteKeyValue<string>(FApplicationKey + 'SavePaths\', 'Markers', Value, WriteStringToReg);
+end;
+
+procedure TSettingsRegistry.SetSavePathForMasks(const Value: string);
+begin
+  WriteKeyValue<string>(FApplicationKey + 'SavePaths\', 'Masks', Value, WriteStringToReg);
+end;
+
+procedure TSettingsRegistry.SetSavepathRelativeTo(
+  const Value: TSavepathRelativeTo);
+begin
+  WriteKeyValue<integer>(FApplicationKey + 'SavePaths\', 'RelativeTo', integer(Value), FReg.WriteInteger);
+end;
+
+procedure TSettingsRegistry.WriteKeyValue<T>(const KeyName, ValueName: string;
+  const Value: T;
+  WriteMethod: TRegistryWriteMethod<T>);
 var
   OpenResult: boolean;
 begin
@@ -124,10 +196,15 @@ begin
     Exit;
 
   try
-    FReg.WriteInteger(ValueName, Value);
+    WriteMethod(ValueName, Value);
   finally
     FReg.CloseKey;
   end;
+end;
+
+procedure TSettingsRegistry.WriteStringToReg(const Name: string; Value: string);
+begin
+  FReg.WriteString(Name, Value);
 end;
 
 end.
