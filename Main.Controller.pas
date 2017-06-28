@@ -4,7 +4,7 @@ interface
 
 uses
   AnnotatedImage, Annotation.Interfaces, SysUtils, Classes, Generics.Collections,
-  Vcl.Graphics, Controls, Vcl.StdActns, Vcl.ExtCtrls, StdCtrls;
+  Vcl.Graphics, Controls, Vcl.StdActns, Vcl.ExtCtrls, StdCtrls, Settings;
 
 type
 
@@ -15,6 +15,7 @@ type
     FAnnotatedImages: TObjectList<TAnnotatedImage>;
     FCurrentIndex: integer;
     FZoomFactor:  Byte;
+    FApplicationSettings: ISettings;
     procedure   AddImage(const AFileName: TFileName);
     function    GetCurrentImage: TAnnotatedImage;
     procedure   SetCurrentImageIndex(const Value: integer);
@@ -61,7 +62,7 @@ implementation
 
 uses
   superobject, JPeg, math, IOUtils, Windows, Dialogs, System.UITypes,
-  Settings, SettingsView, SettingsController;
+  SettingsView, SettingsController, Vcl.Forms;
 
 { TAnnotatedImageController }
 
@@ -133,10 +134,14 @@ begin
   FView.SetHistoryBoxOnclickEvent(SetAnnotationActionIndex);
   FView.SetLoadImageMethod(OpenImages);
   FView.SetShowSettingsExecute(ShowApplicationSettings);
+
+  FApplicationSettings:= TSettingsRegistry.Create('Software\ImageAnnotationTool\');
+
 end;
 
 destructor TAnnotatedImageController.Destroy;
 begin
+  FApplicationSettings:= nil;
   FAnnotatedImages.Free;
   inherited;
 end;
@@ -227,31 +232,41 @@ procedure TAnnotatedImageController.SaveImageAnnotation(
   const AnnotatedImage: TAnnotatedImage);
 var
   Mask: TJPEGImage;
+  MaskBitmap: Vcl.Graphics.TBitmap;
   MaskJSON: ISuperObject;
-  FileName: TFileName;
+  FileName, BaseName: TFileName;
 begin
   if not Assigned(AnnotatedImage) then
     Exit;
 
+  case FApplicationSettings.GetSavepathRelativeTo of
+    sprApplication: BaseName:= ExtractFilePath(Application.ExeName);
+    sprImage:       BaseName:= ExtractFilePath(AnnotatedImage.Name);
+  else
+    BaseName:= ExtractFilePath(Application.ExeName);
+  end;
+
   // save mask
   Mask:= TJPEGImage.Create;
   try
-    Mask.Assign(AnnotatedImage.MaskBitmap);
-    FileName:= ExtractFilePath(AnnotatedImage.Name) +
-                    'masks\' +
+    MaskBitmap:= AnnotatedImage.MaskBitmap;
+    Mask.Assign(MaskBitmap);
+    FileName:= BaseName +
+                    IncludeTrailingPathDelimiter(FApplicationSettings.GetSavePathForMasks) +
                     ExtractFileName(ChangeFileExt(AnnotatedImage.Name, '')) + '_mask' +
                     '.jpg';
     if ForceDirectories(ExtractFileDir(FileName)) then
       Mask.SaveToFile(FileName);
   finally
     Mask.Free;
+    MaskBitmap.Free;
   end;
 
   // save JSON
   MaskJSON:= AnnotatedImage.AnnotationActionsJSON;
   MaskJSON.AsJSon(True);
-  FileName:= ExtractFilePath(AnnotatedImage.Name) +
-                  'markers\' +
+  FileName:= BaseName +
+                  IncludeTrailingPathDelimiter(FApplicationSettings.GetSavePathForMarkers) +
                   ExtractFileName(ChangeFileExt(AnnotatedImage.Name, '')) + '_markers' +
                   '.txt';
   if ForceDirectories(ExtractFileDir(FileName)) then
@@ -332,12 +347,10 @@ end;
 procedure TAnnotatedImageController.ShowApplicationSettings(Sender: TObject);
 var
   SettingsController: TSettingsController;
-  SettingsModel: ISettings;
   SettingsView: TFormSettings;
 begin
-  SettingsModel:= TSettingsRegistry.Create('Software\ImageAnnotationTool\');
   SettingsView:= TFormSettings.Create(nil);
-  SettingsController:= TSettingsController.Create(SettingsModel, SettingsView);
+  SettingsController:= TSettingsController.Create(FApplicationSettings, SettingsView);
   try
     SettingsController.ShowSettings;
   finally
