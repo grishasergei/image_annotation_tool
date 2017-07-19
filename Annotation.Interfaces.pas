@@ -47,6 +47,7 @@ type
     procedure SetImageCOntainerMouseDownEvent(Event: TMouseEvent);
     procedure SetHistoryBoxOnclickEvent(Event: TNotifyEvent);
     procedure SetLoadImageMethod(Method: TLoadImageMethod);
+    procedure SetShowSettingsExecute(Event: TNotifyEvent);
   end;
 
 implementation
